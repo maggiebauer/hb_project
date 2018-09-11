@@ -9,8 +9,8 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-# don't forget the backrefs!!!
-
+################################################################################
+# Full Contact Data
 
 class FCCompany(db.Model):
     """ Full Contact company info  """
@@ -30,6 +30,7 @@ class FCCompany(db.Model):
     people = db.relationship('Person', backref=db.backref('fc_company'))
     industries = db.relationship('CompanyIndustry', backref=db.backref('fc_companies'))
     images = db.relationship('Image', backref=db.backref('fc_company'))
+    cb_company = db.relationship('CBCompany', backref=db.backref('fc_company'))
 
     def __repr__(self):
         """Provide helpful representation when printed."""
@@ -145,4 +146,110 @@ class Image(db.Model):
         """Provide helpful representation when printed."""
         repr_str = '<Image: image_id:{}, image_type:{}>'
         return repr_str.format(self.image_id, self.image_type)
+
+
+################################################################################
+
+# Crunchbase data
+
+class CBCompany(db.Model):
+    """ Crunchbase company info """
+
+     __tablename__ = 'cb_companies'
+
+    cb_company_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    cb_company_name = db.Column(db.String(100), nullable=False)
+    website_url = db.Column(db.String(100))
+    cb_url = db.Column(db.String(300))
+    market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
+    state_code_id = db.Column(db.Integer, db.ForeignKey('state_codes.state_code_id'))
+    fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'))
+
+    funding_rounds = db.relationship('FundingRound', backref=db.backref('cb_company'))
+    hq_state_code = db.relationship('StateCode', backref=db.backref('cb_companies'))
+    market_type = db.relationship('MarketType', backref=db.backref('cb_companies'))
+
+    def __repr__(self):
+        """Provide helpful representation when printed."""
+
+        repr_str = '<CBCompany: id:{}, name:{}>'
+        return repr_str.format(self.cb_company_id, self.cb_company_name)
+
+class FundingRound(db.Model):
+    """ Crunchbase funding round info """
+
+    __tablename__ = 'funding_rounds'
+
+    funding_round_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    cb_company_id = db.Column(db.Integer, nullable=False, db.ForeignKey('cb_companies.cb_company_id'))
+    funding_type_id = db.Column(db.Integer, nullable=False, db.ForeignKey('funding_types.funding_type_id'))
+    funded_amt = db.Column(db.Integer, nullable=False)
+    funded_date = db.Column(db.DateTime)
+
+    funding_type = db.relationship('FundingType')
+
+    def __repr__(self):
+    """Provide helpful representation when printed."""
+
+    repr_str = '<FundingRound: id:{}, cb_company_id:{}, funding_type_id:{}, funding_amt:{}>'
+    return repr_str.format(self.funding_round_id, self.cb_company_id, self.funding_type_id, self.funding_amt)
+
+
+class FundingType(db.Model):
+    """ Crunchbase funding round type """
+
+    __tablename__ = 'funding_types'
+
+    funding_type_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    funding_type_name = db.Column(db.String(50), nullable=False)
+
+    repr_str = '<FundingType: id:{}, funding_type_name:{}>'
+    return repr_str.format(self.funding_type_id, self.funding_type_name)
+
+
+class StateCode(db.Model):
+    """ Crunchbase state codes """
+
+    __tablename__ = 'state_codes'
+
+    state_code_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    state_code = db.Column(db.String(10), nullable=False)
+
+    repr_str = '<StateCode: id:{}, state_code:{}>'
+    return repr_str.format(self.state_code_id, self.state_code)
+
+
+class MarketType(db.Model):
+    """ Crunchbase market types """
+
+    __tablename__ = 'market_types'
+
+    market_type_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    market_type = db.Column(db.String(50), nullable=False)
+
+    repr_str = '<MarketType: id:{}, market_type:{}>'
+    return repr_str.format(self.market_type_id, self.market_type)
+
+
+################################################################################
+
+# Helper functions
+
+def connect_to_db(app):
+    """Connect the database to our Flask app."""
+
+    # Configure to use our PstgreSQL database
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///company_insights'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.app = app
+    db.init_app(app)
+
+
+if __name__ == "__main__":
+    # As a convenience, if we run this module interactively, it will leave
+    # you in a state of being able to work with the database directly.
+
+    from server import app
+    connect_to_db(app)
+    print("Connected to DB.")
 
