@@ -1,0 +1,3 @@
+need to figure out how to actually do this properly, but for now, making a list of what will eventually be needed
+
+flask_sqlalchemy
