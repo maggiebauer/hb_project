@@ -44,8 +44,8 @@ class SocialMediaLink(db.Model):
 
     __tablename__ = 'social_media'
 
-    fc_company_id = db.Column(db.Integer, nullable=False, db.ForeignKey('fc_companies.fc_company_id'))
-    sm_type_id = db.Column(db.String(10), nullable=False, db.ForeignKey('social_media_sites.sm_type_id'))
+    fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'), nullable=False)
+    sm_type_id = db.Column(db.String(10), db.ForeignKey('social_media_sites.sm_type_id'), nullable=False,)
     sm_site_url = db.Column(db.String(200, nullable=False))
 
     sm_type = db.relationship('SocialMediaType', backref=db.backref('social_media_links'))
@@ -77,7 +77,7 @@ class CompanyLink(db.Model):
 
     __tablename__ = 'company_links'
 
-    fc_company_id = db.Column(db.Integer, nullable=False, db.ForeignKey('fc_companies.fc_company_id'))
+    fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'), nullable=False)
     link_type = db.Column(db.String(50), nullable=False)
     link_url = db.Column(db.String(300), nullable=False)
 
@@ -93,7 +93,7 @@ class Person(db.Model):
     __tablename__ = 'people'
 
     person_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    fc_company_id = db.Column(db.Integer, nullable=False, db.ForeignKey('fc_companies.fc_company_id'))
+    fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'), nullable=False)
     title = db.Column(db.String(50))
     person_image_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'))
 
@@ -124,8 +124,8 @@ class CompanyIndustry(db.Model):
 
     __tablename__ = 'company_industries'
 
-    industry_id = db.Column(db.Integer, nullable=False, db.ForeignKey('industry_types.industry_id'))
-    fc_company_id = db.Column(db.Integer, nullable=False, db.ForeignKey('fc_companies.fc_company_id'))
+    industry_id = db.Column(db.Integer, db.ForeignKey('industry_types.industry_id'), nullable=False)
+    fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'), nullable=False)
 
     def __repr__(self):
         """Provide helpful representation when printed."""
@@ -155,7 +155,7 @@ class Image(db.Model):
 class CBCompany(db.Model):
     """ Crunchbase company info """
 
-     __tablename__ = 'cb_companies'
+    __tablename__ = 'cb_companies'
 
     cb_company_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     cb_company_name = db.Column(db.String(100), nullable=False)
@@ -181,18 +181,18 @@ class FundingRound(db.Model):
     __tablename__ = 'funding_rounds'
 
     funding_round_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    cb_company_id = db.Column(db.Integer, nullable=False, db.ForeignKey('cb_companies.cb_company_id'))
-    funding_type_id = db.Column(db.Integer, nullable=False, db.ForeignKey('funding_types.funding_type_id'))
+    cb_company_id = db.Column(db.Integer, db.ForeignKey('cb_companies.cb_company_id'), nullable=False)
+    funding_type_id = db.Column(db.Integer, db.ForeignKey('funding_types.funding_type_id'), nullable=False)
     funded_amt = db.Column(db.Integer, nullable=False)
     funded_date = db.Column(db.DateTime)
 
     funding_type = db.relationship('FundingType')
 
     def __repr__(self):
-    """Provide helpful representation when printed."""
+        """Provide helpful representation when printed."""
 
-    repr_str = '<FundingRound: id:{}, cb_company_id:{}, funding_type_id:{}, funding_amt:{}>'
-    return repr_str.format(self.funding_round_id, self.cb_company_id, self.funding_type_id, self.funding_amt)
+        repr_str = '<FundingRound: id:{}, cb_company_id:{}, funding_type_id:{}, funding_amt:{}>'
+        return repr_str.format(self.funding_round_id, self.cb_company_id, self.funding_type_id, self.funding_amt)
 
 
 class FundingType(db.Model):
@@ -203,8 +203,11 @@ class FundingType(db.Model):
     funding_type_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     funding_type_name = db.Column(db.String(50), nullable=False)
 
-    repr_str = '<FundingType: id:{}, funding_type_name:{}>'
-    return repr_str.format(self.funding_type_id, self.funding_type_name)
+    def __repr__(self):
+        """Provide helpful representation when printed."""    
+        
+        epr_str = '<FundingType: id:{}, funding_type_name:{}>'
+        return repr_str.format(self.funding_type_id, self.funding_type_name)
 
 
 class StateCode(db.Model):
@@ -215,8 +218,10 @@ class StateCode(db.Model):
     state_code_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     state_code = db.Column(db.String(10), nullable=False)
 
-    repr_str = '<StateCode: id:{}, state_code:{}>'
-    return repr_str.format(self.state_code_id, self.state_code)
+    def __repr__(self):
+        """Provide helpful representation when printed."""
+        repr_str = '<StateCode: id:{}, state_code:{}>'
+        return repr_str.format(self.state_code_id, self.state_code)
 
 
 class MarketType(db.Model):
@@ -227,8 +232,11 @@ class MarketType(db.Model):
     market_type_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     market_type = db.Column(db.String(50), nullable=False)
 
-    repr_str = '<MarketType: id:{}, market_type:{}>'
-    return repr_str.format(self.market_type_id, self.market_type)
+    def __repr__(self):
+        """Provide helpful representation when printed."""    
+    
+        repr_str = '<MarketType: id:{}, market_type:{}>'
+        return repr_str.format(self.market_type_id, self.market_type)
 
 
 ################################################################################
