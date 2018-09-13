@@ -45,8 +45,9 @@ class SocialMediaLink(db.Model):
 
     __tablename__ = 'social_media'
 
+    sm_link_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'), nullable=False)
-    sm_type_id = db.Column(db.String(10), db.ForeignKey('social_media_sites.sm_type_id'), nullable=False,)
+    sm_type_id = db.Column(db.String(10), db.ForeignKey('social_media_sites.sm_type_id'), nullable=False)
     sm_site_url = db.Column(db.String(200), nullable=False)
 
     sm_type = db.relationship('SocialMediaType', backref=db.backref('social_media_links'))
@@ -78,6 +79,7 @@ class CompanyLink(db.Model):
 
     __tablename__ = 'company_links'
 
+    company_link_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'), nullable=False)
     link_type = db.Column(db.String(50), nullable=False)
     link_url = db.Column(db.String(300), nullable=False)
@@ -125,6 +127,7 @@ class CompanyIndustry(db.Model):
 
     __tablename__ = 'company_industries'
 
+    company_with_industry_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     industry_id = db.Column(db.Integer, db.ForeignKey('industry_types.industry_id'), nullable=False)
     fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'), nullable=False)
 
@@ -160,7 +163,7 @@ class CBCompany(db.Model):
 
     cb_company_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     cb_company_name = db.Column(db.String(100), nullable=False)
-    website_url = db.Column(db.String(100), nullable=False)
+    cb_company_domain = db.Column(db.String(100), nullable=False)
     cb_permalink = db.Column(db.String(300), nullable=False)
     cb_url = db.Column(db.String(300))
     market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
@@ -245,21 +248,21 @@ class MarketType(db.Model):
 
 # Helper functions
 
-def connect_to_db(app):
-    """Connect the database to our Flask app."""
+# def connect_to_db(app):
+#     """Connect the database to our Flask app."""
 
-    # Configure to use our PstgreSQL database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///company_insights'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.app = app
-    db.init_app(app)
+#     # Configure to use our PstgreSQL database
+#     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///company_insights'
+#     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#     db.app = app
+#     db.init_app(app)
 
 
-if __name__ == "__main__":
-    # As a convenience, if we run this module interactively, it will leave
-    # you in a state of being able to work with the database directly.
+# if __name__ == "__main__":
+#     # As a convenience, if we run this module interactively, it will leave
+#     # you in a state of being able to work with the database directly.
 
-    from server import app
-    connect_to_db(app)
-    print("Connected to DB.")
+#     from server import app
+#     connect_to_db(app)
+#     print("Connected to DB.")
 
