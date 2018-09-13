@@ -19,6 +19,7 @@ class FCCompany(db.Model):
 
     fc_company_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     fc_company_name = db.Column(db.String(100), nullable=False)
+    fc_company_domain = db.Column(db.String(100), nullable=False)
     logo_image_id = db.Column(db.Integer, db.ForeignKey('images.image_id'))
     location = db.Column(db.String(300))
     founded = db.Column(db.String(25))
@@ -46,7 +47,7 @@ class SocialMediaLink(db.Model):
 
     fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'), nullable=False)
     sm_type_id = db.Column(db.String(10), db.ForeignKey('social_media_sites.sm_type_id'), nullable=False,)
-    sm_site_url = db.Column(db.String(200, nullable=False))
+    sm_site_url = db.Column(db.String(200), nullable=False)
 
     sm_type = db.relationship('SocialMediaType', backref=db.backref('social_media_links'))
     image = db.relationship('Image')
@@ -159,7 +160,8 @@ class CBCompany(db.Model):
 
     cb_company_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     cb_company_name = db.Column(db.String(100), nullable=False)
-    website_url = db.Column(db.String(100))
+    website_url = db.Column(db.String(100), nullable=False)
+    cb_permalink = db.Column(db.String(300), nullable=False)
     cb_url = db.Column(db.String(300))
     market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
     state_code_id = db.Column(db.Integer, db.ForeignKey('state_codes.state_code_id'))
