@@ -1,11 +1,7 @@
 
-"""Models and database functions for Ratings project."""
+"""Models and database functions for business finder project."""
 
 from flask_sqlalchemy import SQLAlchemy
-
-# This is the connection to the PostgreSQL database; we're getting this through
-# the Flask-SQLAlchemy helper library. On this, we can find the `session`
-# object, where we do most of our interactions (like committing, etc.)
 
 db = SQLAlchemy()
 
@@ -166,13 +162,12 @@ class CBCompany(db.Model):
     # cb_company_domain = db.Column(db.String(100), nullable=False)
     cb_permalink = db.Column(db.String(300), nullable=False)
     cb_url = db.Column(db.String(300))
-    # market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
-    # state_code_id = db.Column(db.Integer, db.ForeignKey('state_codes.state_code_id'))
+    market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
+    state_code = db.Column(db.String(10))
     # fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'))
 
-    # funding_rounds = db.relationship('FundingRound', backref=db.backref('cb_company'))
-    # hq_state_code = db.relationship('StateCode', backref=db.backref('cb_companies'))
-    # market_type = db.relationship('MarketType', backref=db.backref('cb_companies'))
+    funding_rounds = db.relationship('FundingRound', backref=db.backref('cb_company'))
+    market_type = db.relationship('MarketType', backref=db.backref('cb_companies'))
 
     def __repr__(self):
         """Provide helpful representation when printed."""
@@ -188,10 +183,12 @@ class FundingRound(db.Model):
     funding_round_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     cb_company_id = db.Column(db.Integer, db.ForeignKey('cb_companies.cb_company_id'), nullable=False)
     funding_type_id = db.Column(db.Integer, db.ForeignKey('funding_types.funding_type_id'), nullable=False)
-    funded_amt = db.Column(db.Integer, nullable=False)
+    market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
+    funded_amt = db.Column(db.String(25))
     funded_date = db.Column(db.DateTime)
 
     funding_type = db.relationship('FundingType')
+    market_type = db.relationship('MarketType')
 
     def __repr__(self):
         """Provide helpful representation when printed."""
@@ -207,6 +204,7 @@ class FundingType(db.Model):
 
     funding_type_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     funding_type_name = db.Column(db.String(50), nullable=False)
+    funding_type_code = db.Column(db.String(50))
 
     def __repr__(self):
         """Provide helpful representation when printed."""    
@@ -215,27 +213,13 @@ class FundingType(db.Model):
         return repr_str.format(self.funding_type_id, self.funding_type_name)
 
 
-class StateCode(db.Model):
-    """ Crunchbase state codes """
-
-    __tablename__ = 'state_codes'
-
-    state_code_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    state_code = db.Column(db.String(10), nullable=False)
-
-    def __repr__(self):
-        """Provide helpful representation when printed."""
-        repr_str = '<StateCode: id:{}, state_code:{}>'
-        return repr_str.format(self.state_code_id, self.state_code)
-
-
 class MarketType(db.Model):
     """ Crunchbase market types """
 
     __tablename__ = 'market_types'
 
     market_type_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    market_type = db.Column(db.String(50), nullable=False)
+    market_type = db.Column(db.String(200), nullable=False)
 
     def __repr__(self):
         """Provide helpful representation when printed."""    
