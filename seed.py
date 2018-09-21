@@ -1,14 +1,11 @@
 """Utility file to seed company_insights database from FullContact API and Crunchbase data csb in seed_data/"""
 
 from sqlalchemy import func
-# from model import FCCompany
-# from model import SocialMediaLink
-# from model import SocialMediaType
-# from model import CompanyLink
-# from model import Person
-# from model import IndustryType
-# from model import CompanyIndustry
-# from model import Image
+from model import FCCompany
+from model import SMLink
+from model import CompanyLink
+from model import IndustryType
+from model import CompanyIndustry
 from model import CBCompany
 from model import FundingRound
 from model import FundingType
@@ -18,6 +15,9 @@ from model import connect_to_db, db
 from server import app
 import datetime
 import csv
+
+###########################################################################
+# Crunchbase data seeding
 
 
 def load_market_types():
@@ -92,15 +92,15 @@ def load_cb_rounds():
     all_funding_types = FundingType.query.all()
     funding_type_dict = {}
 
-    for type in all_funding_types:
-        funding_type_dict[(type.funding_type_name, type.funding_type_code)] = type.funding_type_id
+    for f_type in all_funding_types:
+        funding_type_dict[(f_type.funding_type_name, f_type.funding_type_code)] = f_type.funding_type_id
 
     # Get market types to populate foreign key for market_types table
     all_market_types = MarketType.query.all()
     market_type_dict = {}
 
-    for type in all_market_types:
-        market_type_dict[type.market_type] = type.market_type_id
+    for m_type in all_market_types:
+        market_type_dict[m_type.market_type] = m_type.market_type_id
 
     # Get company ids for foreign key in the funding_rounds table
     all_company_ids = CBCompany.query.all()
@@ -124,6 +124,9 @@ def load_cb_rounds():
 
     db.session.commit()
 
+
+
+############################################################################
 
 
 if __name__ == "__main__":
