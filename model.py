@@ -113,7 +113,7 @@ class FCCompany(db.Model):
         """Provide helpful representation when printed."""
 
         repr_str = '<FCCompany: id:{}, name:{}, location:{}>'
-        return repr_str.format(self.fc_company_id, self.fc_company_name, self.location)
+        return repr_str.format(self.fc_company_id, self.fc_company_name, self.location_cit)
 
 
 class SMLink(db.Model):
