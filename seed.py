@@ -73,7 +73,7 @@ def load_cb_companies():
     companies_reader = csv.reader(companies_csv)
     
     for row in companies_reader:        
-        cb_company = CBCompany(cb_company_name=row[1], 
+        cb_company = CBCompany(cb_company_name=row[1].lower(), 
                     cb_url=row[2],
                     cb_permalink=row[0], 
                     state_code=row[7])

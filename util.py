@@ -1,4 +1,8 @@
 import json
+import os
+import sys
+import urllib.request, urllib.parse
+import io
 from flask import Flask
 from model import connect_to_db, db
 from model import FCCompany
@@ -6,25 +10,75 @@ from model import SMLink
 from model import CompanyLink
 from model import IndustryType
 from model import CompanyIndustry
+from model import CBCompany
+from model import FundingRound
+from model import FundingType
+from model import MarketType
+
+################################################################################
+# Functions to fetch info from Crunchbase data tables, send request to FullContact API, and store response
+
+def fetch_all_cb_companies(company_str):
+    ''' Find all possible Crunchbase companies and return a list of possible matches '''
+
+    companies = CBCompany.query.filter(CBCompany.cb_company_name.like('%company_str%')).all()
+    return companies
+
+def fetch_selected_cb_company(user_company_str):
+    ''' Fetch the company object from CBCopmany to use for look up with FullContact '''
+    
+    company = CBCompany.query.filter(CBCompany.cb_company_name == user_company_str.lower()).first()
+    return company
+
+def get_domain(cb_co_object):
+    ''' Returns domain from Crunchbase company url '''
+    
+    co_url = cb_co_object.cb_url
+    if co_url[:8] == 'https://':
+        domain = co_url[8:]
+    elif co_url[:7] == 'http://':
+        domain = co_url[7:]
+    return domain
 
 
+def fetch_fc_company(company_domain_str):
+    ''' Call FullContact API with company domain and return JSON string '''
+
+    # set variables needed to pass and call to API
+    api_key = os.environ['FULLCONTACT_API_KEY']
+    req = urllib.request.Request('https://api.fullcontact.com/v3/company.enrich')
+    domain = company_domain_str
+
+    # domain = urllib.parse.urlencode(domain)
+    # req = urllib.request.Request('https://api.fullcontact.com/v3/company.enrich'.encode('utf-8'))
+    req.add_header('Authorization', 'Bearer {}'.format(api_key))
+    data = json.dumps({"domain": domain})
+    binary_data = data.encode('utf-8')
+    response = urllib.request.urlopen(req,binary_data)
+
+    # turn response into json object
+    response_str = response.read().decode('utf-8')
+    response_json_obj = json.loads(response_str)
+
+    # write response to file to seed into database
+    with io.open('seed_data/fc_seed_data.txt', 'a') as f:
+        f.write(json.dumps(response_json_obj, ensure_ascii=False))
+
+    return response_json_obj
+
+def run_fetch_funcs(company_str):
+    ''' Run Crunchbase and FullContact fetch functions for a given search '''
+    pass
 
 
 ################################################################################
-# FullContact
-
-def fetch_cb_company(company_str):
-    pass
-
-def fetch_fc_company(company_domain_str):
-    pass 
-
+# FullContact info loaded to database
 
 
 def load_fc_industry_types(response):
     ''' Load the types of FullContact industries into database '''
 
-    for industry in response['industries']:
+    for industry in response['details']['industries']:
         ind_name = industry['name']
         if not IndustryType.query.filter(IndustryType.industry_name==ind_name).first():
 
@@ -34,20 +88,25 @@ def load_fc_industry_types(response):
     db.session.commit()
 
 
-
-# need to add in cb_comapny_id and domain
-def load_fc_company(response):
+# need to add in cb_comapny_id and domain - and uncomment cb_company backref
+def load_fc_company(response, domain, cb_company_id):
     ''' Load the company info from FullContact and then load the remaining FC tables '''
 
-    fc_co_name = response['organization']['name']
+    # fc_co_name = response['organization']['name']
 
-    if not FCCompany.query.filter(FCCompany.fc_company_name==fc_co_name).first():
-        fc_company = FCCompany(fc_company_name=response['organization']['name'],
+    # if not FCCompany.query.filter(FCCompany.fc_company_name==fc_co_name).first():
+
+    fc_co_domain = domain
+    if not FCCompany.query.filter(FCCompany.fc_company_domain == fc_co_domain).first():
+        fc_company = FCCompany(fc_company_name=response['name'],
+                            fc_company_domain=fc_co_domain,
+                            fc_company_bio=response['bio'],
                             logo_image_url=response['logo'],
-                            location_city=response['organization']['contactInfo']['addresses'][0]['locality'],
-                            location_state_code=response['organization']['contactInfo']['addresses'][0]['region']['code'],
-                            founded=response['organization']['founded'],
-                            num_employees=response['organization']['approxEmployees'])
+                            location_city=response['details']['locations'][0]['city'],
+                            location_state_code=response['details']['locations'][0]['regionCode'],
+                            founded=response['founded'],
+                            num_employees=response['employees'],
+                            cb_company_id=cb_company_id)
 
         db.session.add(fc_company)
     db.session.commit()
@@ -57,29 +116,29 @@ def load_fc_company(response):
     def load_company_links(response, fc_company_id):
         ''' Load the company links info from FullContact '''
 
-        for link in response['organization']['links']:
-            company_link = CompanyLink(fc_company_id=fc_company_id,
-                            link_type=link['label'],
-                            link_url=link['url'])
-            db.session.add(company_link)
+        for link in response['details']['urls']:
+            if not query.filter(CompanyLink.link_url == response['details']['urls']['value']):
+                company_link = CompanyLink(fc_company_id=fc_company_id,
+                                link_type=link['label'],
+                                link_url=link['value'])
+                db.session.add(company_link)
 
 
-    def load_social_medias(response, fc_company_id):
+    def load_social_media(response, fc_company_id):
         ''' Load the social media links info from FullContact '''
+        # import pdb; pdb.set_trace()
 
-        for link in response['socialProfiles']:
-            if link['typeName'] == 'LinkedIn':
+        sm_site_dict = response['details']['profiles']
+        # for link_type in response['details']['profiles']:
+        for sm_site in sm_site_dict:
+            for key in sm_site:
+                name = key['service']
+                site = key['url']
+                bio = key['bio']
                 sm_link = SMLink(fc_company_id=fc_company_id,
-                            sm_name='LinkedIn',
-                            sm_site_url=link['url'],
-                            sm_bio_linkedin=link['bio'])
-                db.session.add(sm_link)
-
-        
-            else:
-                sm_link = SMLink(fc_company_id=fc_company_id,
-                            sm_name=link['typeName'],
-                            sm_site_url=link['url'])
+                            sm_name=name,
+                            sm_site_url=site,
+                            sm_bio=bio)
                 db.session.add(sm_link)
 
 
@@ -91,225 +150,46 @@ def load_fc_company(response):
 
         for industry in all_industry_types:
             industry_types_dict[industry.industry_name] = industry.industry_id
-        print(industry_types_dict)
 
-        for co_industry in response['industries']:
+        for co_industry in response['details']['industries']:
             company_industry = CompanyIndustry(industry_id=industry_types_dict[co_industry['name']],
                                 fc_company_id=fc_company_id)
-            print(company_industry)
             db.session.add(company_industry)
 
-    fc_co_ojbect = FCCompany.query.filter(FCCompany.fc_company_name==fc_co_name).first()
-    print(fc_co_ojbect)
+
+
+    fc_co_ojbect = FCCompany.query.filter(FCCompany.fc_company_domain==fc_co_domain).first()
 
     load_company_links(response, fc_co_ojbect.fc_company_id)
-    load_social_medias(response, fc_co_ojbect.fc_company_id)
+    # load_social_media(response, fc_co_ojbect.fc_company_id)
     load_company_industries(response, fc_co_ojbect.fc_company_id)
 
-response = {
-  "status" : 200,
-  "requestId" : "9ffd07d9-2ef9-4fd6-994a-228472a5be6f",
-  "category" : [ {
-    "name" : "Other",
-    "code" : "OTHER"
-  } ],
-  "logo" : "https://d2ojpxxtu63wzl.cloudfront.net/static/e9f3aeb8965684906efa7ae514988ffb_0837a93ef09a70f8b9ff73efac18176225fd0b9cb8bf84a60c5926701b4c5033",
-  "website" : "https://www.fullcontact.com",
-  "languageLocale" : "en",
-  "industries": [ {
-    "type": "SIC",
-    "name": "Computer Peripheral Equipment, Nec",
-    "code": "3577"
-  }, {
-    "type": "SIC",
-    "name": "Computers, Peripherals, and Software",
-    "code": "5045"
-  }, {
-    "type": "SIC",
-    "name": "Computer Integrated Systems Design",
-    "code": "7373"
-  }, {
-    "type": "SIC",
-    "name": "Computer Peripheral Equipment, Nec",
-    "code": "3577"
-  }, {
-    "type": "SIC",
-    "name": "Computers, Peripherals, and Software",
-    "code": "5045"
-  }, {
-    "type": "SIC",
-    "name": "Computer Integrated Systems Design",
-    "code": "7373"
-  } ],
-  "organization" : {
-    "name" : "FullContact Inc.",
-    "approxEmployees" : 50,
-    "founded" : "2010",
-    "overview" : "Solving the world's contact information problem!",
-    "contactInfo" : {
-      "emailAddresses" : [ {
-        "value" : "support@fullcontact.com",
-        "label" : "support"
-      }, {
-        "value" : "team@fullcontact.com",
-        "label" : "sales"
-      } ],
-      "phoneNumbers" : [ {
-        "number" : "+1 (888) 330-6943",
-        "label" : "other"
-      } ],
-      "addresses" : [ {
-        "addressLine1" : "1755 Blake Street",
-        "addressLine2" : "Suite 450",
-        "locality" : "Denver",
-        "region" : {
-          "name" : "Colorado",
-          "code" : "CO"
-        },
-        "country" : {
-          "name" : "United States",
-          "code" : "US"
-        },
-        "postalCode" : "80202",
-        "label" : "work"
-      } ]
-    },
-    "links" : [ {
-      "url" : "https://www.fullcontact.com/developer",
-      "label" : "other"
-    }, {
-      "url" : "https://fullcontact.com/blog",
-      "label" : "blog"
-    }, {
-      "url" : "https://www.youtube.com/watch?v=koFtyUDbYak",
-      "label" : "youtube"
-    }, {
-      "url" : "https://www.fullcontact.com/home/feed",
-      "label" : "rss"
-    }, {
-      "url" : "https://www.fullcontact.com/feed",
-      "label" : "rss"
-    }, {
-      "url" : "https://www.fullcontact.com/comments/feed",
-      "label" : "rss"
-    } ],
-    "images" : [ {
-      "url" : "https://d2ojpxxtu63wzl.cloudfront.net/static/edaa53d9a080aea37ddfb85d775620a9_98a2d7beef6a5b4a53f43da4dd1a90bda21dc18f755394fdbf9b6cf3283853a0",
-      "label" : "twitter"
-    }, {
-      "url" : "https://d2ojpxxtu63wzl.cloudfront.net/static/1bacd7306731a30d2a9f024eeb1dcff1_94d77dcdedbfe40707ac4a75ca4f4d2978bffc20b2e33a3288ea9e4d47f5af6c",
-      "label" : "twitter"
-    }, {
-      "url" : "https://d2ojpxxtu63wzl.cloudfront.net/static/3f64db7ba9331fbd1e4cc11655e2d3d4_a2477a83cafc8a98d5533f3617f0b1db2796ad0826482e2eabdc8d3345d70c17",
-      "label" : "twitter"
-    }, {
-      "url" : "https://d2ojpxxtu63wzl.cloudfront.net/static/ee07ac81180408fde663426d3b0afb3f_3a1154347631c037b9bd2b2f33d4cbc8511d58f5c11ad3cbbc319957d1a5149b",
-      "label" : "pinterest"
-    }, {
-      "url" : "https://d2ojpxxtu63wzl.cloudfront.net/static/80885c5e8b570e69bdc55d29aad115cd_a1ce9fb51ea43971d861e452034056d807422a391ac8e27f76ee4a9e803698d1",
-      "label" : "googleplus"
-    }, {
-      "url" : "https://d2ojpxxtu63wzl.cloudfront.net/static/4be5211e4b0129d1c8d41e84f257f343_3d84b3de68d6060243972af12a8ca67c4a595fd86a4419d50bf429e6d778ce2d",
-      "label" : "other"
-    }, {
-      "url" : "https://d2ojpxxtu63wzl.cloudfront.net/static/7e9aa6402ff2975e297a01243c358619_c0b8d4a63a52f4a47106494561c0332b79f848b40fcbe92336a0a17b843f44f8",
-      "label" : "other"
-    } ],
-    "keywords" : [ "APIs", "Boulder", "Contact Management", "Denver", "Developer APIs", "Social Media", "Techstars" ]
-  },
-  "socialProfiles" : [{
-    "bio" : "We're solving the world's contact information problem. Get your contacts under control with @FullContactApp & check out @FullContactAPI for our APIs.",
-    "followers" : 6277,
-    "following" : 1758,
-    "typeId" : "twitter",
-    "typeName" : "Twitter",
-    "url" : "https://twitter.com/FullContactInc",
-    "username" : "FullContactInc",
-    "id" : "142954090"
-  }, {
-    "bio" : "The API that turns partial contact information into full contact information. We provide data enrichment, de-duplication, normalization, and much more.",
-    "followers" : 5032,
-    "following" : 2444,
-    "typeId" : "twitter",
-    "typeName" : "Twitter",
-    "url" : "https://twitter.com/FullContactAPI",
-    "username" : "FullContactAPI",
-    "id" : "340611236"
-  }, {
-    "bio" : "Keep your contact information clean, complete & current across all your address books.",
-    "followers" : 3171,
-    "following" : 1561,
-    "typeId" : "twitter",
-    "typeName" : "Twitter",
-    "url" : "https://twitter.com/FullContactApp",
-    "username" : "FullContactApp",
-    "id" : "451688048"
-  }, {
-    "bio" : "FullContact's address book brings all of your contacts into one place and keeps them automatically up to date on the web, as well as on your iPhone and iPad. Add photos to your contacts. Find them on social networks like Twitter, LinkedIn and of course AngelList. It's the address book that busy professionals from any walk of life can appreciate, and best of all it's free. For developers, the suite of FullContact APIs builds powerful, complete profiles of contacts that can be included in any application.",
-    "followers" : 259,
-    "typeId" : "angellist",
-    "typeName" : "AngelList",
-    "url" : "https://angel.co/fullcontact",
-    "username" : "fullcontact"
-  }, {
-    "bio" : "FullContact provides a suite of cloud-based contact management solutions for businesses, developers, and individuals.",
-    "typeId" : "crunchbasecompany",
-    "typeName" : "CrunchBase",
-    "url" : "http://www.crunchbase.com/organization/fullcontact",
-    "username" : "fullcontact"
-  }, {
-    "bio" : "FullContact is the API that keeps contact information current. We build APIs that developers can integrate into their applications using any language.",
-    "followers" : 28,
-    "following" : 55,
-    "typeId" : "pinterest",
-    "typeName" : "Pinterest",
-    "url" : "http://www.pinterest.com/fullcontact/",
-    "username" : "fullcontact"
-  }, {
-    "bio" : "All your contacts in one place and automatically up-to-date. we're solving the world's contact information problem at https://www.fullcontact.com.",
-    "typeId" : "google",
-    "typeName" : "GooglePlus",
-    "url" : "https://plus.google.com/u/0/107620035082673219790",
-    "id" : "107620035082673219790"
-  }, {
-    "bio" : "FullContact is solving the world's contact information problem by providing APIs to software developers to keep contact information clean, complete and current. FullContact provides identity resolution for all of the disparate pieces of contact information out there on the web. We do this by aggregating billions of contact records, all with numerous attributes, including quality, freshness and frequency. Our patent pending algorithms process all of this data and automatically produce clean, accurate full contact records. As a final step, we then check each data element to make sure that it's publicly available before providing it to our customers. FullContact is a TechStars Boulder 2011 Company.",
-    "typeId" : "linkedincompany",
-    "typeName" : "LinkedIn",
-    "url" : "https://www.linkedin.com/company/fullcontact-inc-",
-    "username" : "fullcontact-inc-",
-    "id" : "2431118"
-  } ],
-  "traffic" : {
-    "topCountryRanking" : [ {
-      "rank" : 7770,
-      "locale" : "us"
-    }, {
-      "rank" : 11728,
-      "locale" : "in"
-    }, {
-      "rank" : 11388,
-      "locale" : "gb"
-    } ],
-    "ranking" : [ {
-      "rank" : 18640,
-      "locale" : "global"
-    }, {
-      "rank" : 7770,
-      "locale" : "us"
-    } ]
-  }
-}
+
+################################################################################
+# Connect to app and call functions
 
 app = Flask(__name__)
 
 connect_to_db(app)
 
 
-# call functions
-load_fc_industry_types(response)
-load_fc_company(response)
+null = None
+false = False
 
-db.session.commit()
+# cb_company_id=8 domain=www.h2o.ai
+# fc_json_co_1 = {'name': 'H2O.ai', 'location': '2307 Leghorn Street  Mountain View California, 94043 United States', 'twitter': 'https://twitter.com/h2oai', 'linkedin': 'https://www.linkedin.com/company/0xdata', 'facebook': 'https://www.facebook.com/0xdata', 'bio': 'H2O.ai provides an open source machine learning platform that makes it easy to build smart applications.', 'logo': 'https://d2ojpxxtu63wzl.cloudfront.net/static/23061fd477ebd8dd4d25fd9dca70f08c_d4ee00704c332bcc04a2a854a0d2f2a590e17a9ee632f63873426db72eb07f3a', 'website': 'http://h2o.ai', 'founded': 2012, 'employees': 94, 'locale': None, 'category': 'Other', 'details': {'locales': [], 'categories': [{'code': 'OTHER', 'name': 'Other'}], 'industries': [{'type': 'SIC', 'name': 'Computers, Peripherals, and Software', 'code': '5045'}], 'emails': [], 'phones': [{'value': '1 (650) 227-4572', 'label': 'other'}], 'profiles': {'owler': {'service': 'owler', 'username': 'h2o-ai', 'userid': '1160105', 'url': 'https://www.owler.com/iaApp/1160105/h2o-ai-company-profile'}, 'twitter': {'service': 'twitter', 'username': 'h2oai', 'url': 'https://twitter.com/h2oai'}, 'crunchbasecompany': {'service': 'crunchbasecompany', 'username': 'h2o-2', 'url': 'http://www.crunchbase.com/organization/h2o-2', 'bio': 'H2O.ai provides an open source machine learning platform that makes it easy to build smart applications.'}, 'linkedincompany': {'service': 'linkedincompany', 'username': '0xdata', 'url': 'https://www.linkedin.com/company/0xdata'}, 'facebook': {'service': 'facebook', 'username': '0xdata', 'url': 'https://www.facebook.com/0xdata'}}, 'locations': [{'label': 'work', 'addressLine1': '2307 Leghorn Street', 'city': 'Mountain View', 'region': 'California', 'regionCode': 'CA', 'postalCode': '94043', 'country': 'United States', 'countryCode': 'US', 'formatted': '2307 Leghorn Street  Mountain View California, 94043 United States'}, {'city': 'Mountain View', 'region': 'CA', 'country': 'United States', 'formatted': '  Mountain View CA,  United States'}], 'images': [{'value': 'https://d2ojpxxtu63wzl.cloudfront.net/static/b27954afe074171f4c03f5a726f3f965_71593e54e7a6922812b3e45bba2236d1b913a97f73b4afaae8b5915d0f8b2e3d', 'label': 'other'}, {'value': 'https://d2ojpxxtu63wzl.cloudfront.net/static/7488c0040392f1549b4ef05022fd6c46_ef04f26756055019aaa7e1c63fd22e20f0d19caaf126b669adbeb0e7461eed3c', 'label': 'other'}, {'value': 'https://d2ojpxxtu63wzl.cloudfront.net/static/23061fd477ebd8dd4d25fd9dca70f08c_d4ee00704c332bcc04a2a854a0d2f2a590e17a9ee632f63873426db72eb07f3a', 'label': 'logo'}], 'urls': [{'value': 'http://h2o.ai', 'label': 'website'}, {'value': 'http://0xdata.com', 'label': 'other'}], 'keywords': [], 'keyPeople': [], 'traffic': {'countryRank': {'global': {'rank': 137058, 'name': 'Global'}}, 'localeRank': {'in': {'rank': 51096, 'name': 'India'}, 'pl': {'rank': 36029, 'name': 'Poland'}, 'us': {'rank': 86173, 'name': 'United States'}}}}, 'dataAddOns': [{'id': 'keypeople', 'name': 'Key People', 'enabled': False, 'applied': False, 'description': 'Displays information about people of interest at this company.', 'docLink': 'http://docs.fullcontact.com/api/#key-people'}], 'updated': '2018-07-09'}
 
+# #cb_company_id=2 domain=www.qounter.com/
+# fc_json_co_2 = {"name": ":Qounter", "location": "  Delaware City Delaware,  United States", "twitter": "https://twitter.com/Qounter", "linkedin": "https://www.linkedin.com/company/-qounter", "facebook": null, "bio": "A new way to earn and share cashback with your friends", "logo": "https://d2ojpxxtu63wzl.cloudfront.net/static/2c62014ed3b38cb6903ca6edc1d74e39_f331b2118de6f783fde8c3228d9c4d1d2101b40c73b4ddc14c83c5f8cc89c8da", "website": "https://www.qounter.com", "founded": 2014, "employees": 3, "locale": null, "category": "Other", "details": {"locales": [], "categories": [{"code": "OTHER", "name": "Other"}], "industries": [{"type": "SIC", "name": "Computer and Data Processing Services", "code": "737"}], "emails": [], "phones": [], "profiles": {"angellist": {"service": "angellist", "username": "qounter", "userid": "531321", "url": "https://angel.co/qounter", "bio": ":Qounter is set to disrupt the cashback space by enabling businesses to attract not only individuals but also their social network by offering social cashback on both online and in-store purchases. :Qounter successfully balances social influence and privacy to develop an engaging platform that is safe, easy and fun to use. :Qounter is unique due to its differentiating characteristics. The social cashback is earned passively and there is no clicking on links and spamming friends to earn cashback. This all happens in real time, online and in-store, so you can actually spend your cashback right after purchasing.", "followers": 3}, "twitter": {"service": "twitter", "username": "Qounter", "userid": "2830540400", "url": "https://twitter.com/Qounter", "bio": "A new way to earn and share cashback with your friends", "followers": 2}, "crunchbasecompany": {"service": "crunchbasecompany", "username": "-qounter", "url": "http://www.crunchbase.com/organization/-qounter", "bio": "The Social Network where you earn cashback with your friends"}, "linkedincompany": {"service": "linkedincompany", "username": "-qounter", "userid": "9323597", "url": "https://www.linkedin.com/company/-qounter", "bio": "Qounter.com is a new social cashback platform which incorporates a unique social cashback benefits program via its mobile app. We provide businesses with an innovative sales and marketing platform by powering a cashback program that rewards :Qounter users with personal and social cashback in real time. Our patent-pending technology platform tracks our users’ online and in-store purchases and credits their personal :Qounters with personal cashback in real time at the time of purchase. :Qounter users are also able to invite friends and share this cashback with them, enabling a two-way social cashback platform in which our users’ :Qounters also go up in real time based on their friends’ purchases.", "followers": 20}, "instagram": {"service": "instagram", "url": "https://instagram.com/qounterapp"}}, "locations": [{"label": "work", "city": "Delaware City", "region": "Delaware", "regionCode": "DE", "country": "United States", "countryCode": "US", "formatted": "  Delaware City Delaware,  United States"}], "images": [{"value": "https://d2ojpxxtu63wzl.cloudfront.net/static/2c62014ed3b38cb6903ca6edc1d74e39_f331b2118de6f783fde8c3228d9c4d1d2101b40c73b4ddc14c83c5f8cc89c8da", "label": "logo"}], "urls": [{"value": "https://www.qounter.com", "label": "website"}, {"value": "https://www.youtube.com/watch?v=HhJj7eQvk4s&list=UUB34sRw-eortr5c7SnSUNFA", "label": "youtube"}], "keywords": ["United States"], "keyPeople": [], "traffic": {"countryRank": {"global": {"rank": 18755142, "name": "Global"}}, "localeRank": {}}}, "dataAddOns": [{"id": "keypeople", "name": "Key People", "enabled": false, "applied": false, "description": "Displays information about people of interest at this company.", "docLink": "http://docs.fullcontact.com/api/#key-people"}], "updated": "2018-08-07"}
 
+# # call functions
+# load_fc_industry_types(fc_json_co_2)
+# load_fc_company(fc_json_co_2, 'www.qounter.com/', 2)
+
+# db.session.commit()
+
+# load_fc_industry_types(fc_json_co_1)
+# load_fc_company(fc_json_co_1, 'www.h2o.ai', 8)
+
+# db.session.commit()
 
