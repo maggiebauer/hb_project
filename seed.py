@@ -76,7 +76,8 @@ def load_cb_companies():
         cb_company = CBCompany(cb_company_name=row[1].lower(), 
                     cb_url=row[2],
                     cb_permalink=row[0], 
-                    state_code=row[7])
+                    state_code=row[7],
+                    city_name=row[9])
         db.session.add(cb_company)
 
     db.session.commit()
@@ -133,7 +134,7 @@ if __name__ == "__main__":
     connect_to_db(app)
 
     # In case tables haven't been created, create them
-    db.create_all()
+    # db.create_all()
 
     # Import different types of data
     load_market_types()

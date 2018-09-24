@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1>In Site Full Search</h1>
+
+<div>
+Enter the name of the company you want to know more about:
+<form action="/search" method="GET">
+    <input type="text" name="company_searched">
+    <input type="submit" value="search">    
+</form>
+</div>
+
+{% endblock %}

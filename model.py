@@ -20,6 +20,7 @@ class CBCompany(db.Model):
     cb_url = db.Column(db.String(300))
     market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
     state_code = db.Column(db.String(10))
+    city_name = db.Column(db.String(50))
 
     funding_rounds = db.relationship('FundingRound', backref=db.backref('cb_company'))
     market_type = db.relationship('MarketType', backref=db.backref('cb_companies'))
@@ -200,6 +201,8 @@ if __name__ == "__main__":
     # you in a state of being able to work with the database directly.
 
     from server import app
-    connect_to_db(app)
+    connect_to_db(app)    
+    db.create_all()
+
     print("Connected to DB.")
 
