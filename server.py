@@ -24,9 +24,19 @@ def search_cb_companies():
     
     comp_search = request.args.get('company_searched')
     
-    poss_comp_lst = u.fetch_all_cb_companies(comp_search)
+    if comp_search != ' ':
+        poss_comp_lst = u.fetch_all_cb_companies(comp_search)
 
-    return render_template('search_page.html', poss_comp_lst=poss_comp_lst)
+        return render_template('search_page.html', poss_comp_lst=poss_comp_lst)
+    else:
+        flash('Please enter a company name')
+        return redirect('/')
+
+
+@app.route('/company-profile')
+def display_company_profile(company_obj):
+
+    pass
 
 
 
@@ -40,6 +50,7 @@ if __name__ == "__main__":
     app.debug = True
     # make sure templates, etc. are not cached in debug mode
     app.jinja_env.auto_reload = app.debug
+    app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
     m.connect_to_db(app)
 

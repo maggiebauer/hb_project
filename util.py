@@ -42,16 +42,13 @@ def get_domain(cb_co_object):
     return domain
 
 
-def fetch_fc_company(company_domain_str):
+def fetch_fc_company(domain):
     ''' Call FullContact API with company domain and return JSON string '''
 
     # set variables needed to pass and call to API
     api_key = os.environ['FULLCONTACT_API_KEY']
     req = urllib.request.Request('https://api.fullcontact.com/v3/company.enrich')
-    domain = company_domain_str
 
-    # domain = urllib.parse.urlencode(domain)
-    # req = urllib.request.Request('https://api.fullcontact.com/v3/company.enrich'.encode('utf-8'))
     req.add_header('Authorization', 'Bearer {}'.format(api_key))
     data = json.dumps({"domain": domain})
     binary_data = data.encode('utf-8')
