@@ -1,6 +1,6 @@
 from jinja2 import StrictUndefined
 from flask import (Flask, render_template, redirect, request, flash,
-                   session)
+                   session, jsonify)
 from flask_debugtoolbar import DebugToolbarExtension
 import model as m
 import util as u
@@ -28,6 +28,8 @@ def search_cb_companies():
         poss_comp_lst = u.fetch_all_cb_companies(comp_search)
 
         return render_template('search_page.html', poss_comp_lst=poss_comp_lst)
+        # print(jsonify(poss_comp_lst))
+        # return jsonify(poss_comp_lst)
     else:
         flash('Please enter a company name')
         return redirect('/')

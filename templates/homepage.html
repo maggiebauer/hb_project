@@ -2,12 +2,14 @@
 {% block content %}
 
 
+<h3 class="hpg-message">Research potential employers efficiently! Find out what they do, check out their social media, and see how they're funded all in one place.</h3>
 
-
-<div class="page-header" id="banner"> 
+<div id="banner"> 
     <form action="/search" class="lead" method="GET">
-        <input type="text" name="company_searched" class="form-control form-control-lg"  placeholder="Enter company name" id="inputLarge"required>
-        <input type="submit" class="btn btn-primary" value="search">    
+        <div class="form-inputs">
+        <input type="text" name="company_searched" placeholder="Enter company name" required>
+        <input type="submit" class="btn btn-primary" value="search"> 
+        </div>   
     </form>
 </div>
 
