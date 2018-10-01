@@ -16,20 +16,22 @@ app.jinja_env.undefined = StrictUndefined
 @app.route('/')
 def index():
     ''' Homepage '''
-    return render_template('homepage.html')
+    # return render_template('homepage.html')
+    return render_template('index.html')
 
-@app.route('/search')
+@app.route('/search.json')
 def search_cb_companies():
     ''' Search and display company '''
     
-    comp_search = request.args.get('company_searched')
+    comp_search = request.args.get('searchCompany')
+    print(comp_search)
     
     if comp_search != ' ':
         poss_comp_lst = u.fetch_all_cb_companies(comp_search)
 
-        return render_template('search_page.html', poss_comp_lst=poss_comp_lst)
-        # print(jsonify(poss_comp_lst))
-        # return jsonify(poss_comp_lst)
+        # return render_template('search_page.html', poss_comp_lst=poss_comp_lst)
+        # # print(jsonify(poss_comp_lst))
+        return jsonify(poss_comp_lst)
     else:
         flash('Please enter a company name')
         return redirect('/')
