@@ -1,14 +1,5 @@
 "use strict";
 
-function findCompany(evt)  {
-  // callback function
-  const getSearchedComp = () => {
-    $.get('/search.json${searchCompany}', data => {
-      const comp = data.searchCompany;
-    })
-  }
-}
-
 
 class DisplaySearchBar extends React.Component  {
   constructor(props)  {
@@ -19,17 +10,28 @@ class DisplaySearchBar extends React.Component  {
     }
   }
 
+  findCompany(e)  {
+    // callback function
+    console.log('say hello');
+    const searchComp = this.state.searchCompany.toLowerCase()
+    $.get('/search.json', { 
+      searchCompany : searchComp
+      })
+   // }
+  }
+
   render()  {
     return (
       <form>
         <div className="form-inputs">
         <input type="text" 
+          name="search-comp"
           placeholder="Enter company name" 
           value={this.state.searchCompany} 
           required
           onChange={e => this.setState({  searchCompany: e.target.value })} 
         /> 
-        <input type="submit" className="btn btn-primary" value="search" onClick={findCompany}/>
+        <input type="submit" className="btn btn-primary" value="search" onClick={this.findCompany.bind(this)}/>
         </div>
       </form>
       );
@@ -39,7 +41,7 @@ class DisplaySearchBar extends React.Component  {
 ReactDOM.render(
   (
   <React.Fragment>
-    <DisplaySearchBar />,
+    <DisplaySearchBar />
   </React.Fragment>
   ),
     document.getElementById('search-bar'),

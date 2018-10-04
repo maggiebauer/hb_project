@@ -22,19 +22,29 @@ def index():
 @app.route('/search.json')
 def search_cb_companies():
     ''' Search and display company '''
+
+    def row_to_dict(row):
+        row_dict = {}
+        for column in row.__table__.columns:
+            row_dict[column.name] = str(getattr(row, column.name))
+        return row_dict
     
     comp_search = request.args.get('searchCompany')
     print(comp_search)
+
+    lst_comp_dicts = []
     
     if comp_search != ' ':
         poss_comp_lst = u.fetch_all_cb_companies(comp_search)
 
-        # return render_template('search_page.html', poss_comp_lst=poss_comp_lst)
-        # # print(jsonify(poss_comp_lst))
-        return jsonify(poss_comp_lst)
+        for comp in poss_comp_lst:
+            row_dict = row_to_dict(comp)
+            lst_comp_dicts.append(row_dict)
     else:
         flash('Please enter a company name')
         return redirect('/')
+    print(lst_comp_dicts)
+    return jsonify(lst_comp_dicts)
 
 
 @app.route('/company-profile')
