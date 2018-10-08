@@ -19,7 +19,7 @@ def index():
     # return render_template('homepage.html')
     return render_template('index.html')
 
-@app.route('/search.json')
+@app.route('/search.json', methods=['POST'])
 def search_cb_companies():
     ''' Search and display company '''
 
@@ -29,7 +29,7 @@ def search_cb_companies():
             row_dict[column.name] = str(getattr(row, column.name))
         return row_dict
     
-    comp_search = request.args.get('searchCompany')
+    comp_search = request.form.get('searchCompany')
     print(comp_search)
 
     lst_comp_dicts = []
@@ -43,7 +43,7 @@ def search_cb_companies():
     else:
         flash('Please enter a company name')
         return redirect('/')
-    print(lst_comp_dicts)
+
     return jsonify(lst_comp_dicts)
 
 
