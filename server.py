@@ -30,8 +30,6 @@ def search_cb_companies():
         return row_dict
     
     comp_search = request.form.get('searchCompany')
-    print(comp_search)
-
     lst_comp_dicts = []
     
     if comp_search != ' ':
@@ -47,10 +45,23 @@ def search_cb_companies():
     return jsonify(lst_comp_dicts)
 
 
-@app.route('/company-profile')
-def display_company_profile(company_obj):
+@app.route('/company-profile.json', methods=['POST'])
+def display_company_profile():
+    ''' Check if the selected company exists in FCCompany already. If not, calls API. 
+    Returns all data on company '''
 
-    pass
+    selected_cb_comp_id = request.form.get('selectedCompanyId')
+
+    all_selected_comp_info = []
+    check_fc_comp_db = m.FCCompany.query.filter(m.FCCompany.cb_company_id == selected_cb_comp_id).first()
+    print(check_fc_comp_db)
+
+    if check_fc_comp_db != None:
+        pass
+    else:
+        pass
+    
+    return jsonify(all_selected_comp_info)
 
 
 

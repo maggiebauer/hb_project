@@ -14,5 +14,6 @@
     size: auto;
 }
 .center-btn  {
-  margin: auto;
+  margin: 0 auto;
+  display: block;
 }
