@@ -43,14 +43,14 @@ class FundingRound(db.Model):
     funded_amt = db.Column(db.String(25))
     funded_date = db.Column(db.DateTime)
 
-    funding_type = db.relationship('FundingType')
+    funding_type = db.relationship('FundingType', backref=db.backref('founding_rounds'))
     market_type = db.relationship('MarketType')
 
     def __repr__(self):
         """Provide helpful representation when printed."""
 
         repr_str = '<FundingRound: id:{}, cb_company_id:{}, funding_type_id:{}, funding_amt:{}>'
-        return repr_str.format(self.funding_round_id, self.cb_company_id, self.funding_type_id, self.funding_amt)
+        return repr_str.format(self.funding_round_id, self.cb_company_id, self.funding_type_id, self.funded_amt)
 
 
 class FundingType(db.Model):
@@ -65,7 +65,7 @@ class FundingType(db.Model):
     def __repr__(self):
         """Provide helpful representation when printed."""    
         
-        epr_str = '<FundingType: id:{}, funding_type_name:{}>'
+        repr_str = '<FundingType: id:{}, funding_type_name:{}>'
         return repr_str.format(self.funding_type_id, self.funding_type_name)
 
 
@@ -98,14 +98,14 @@ class FCCompany(db.Model):
     fc_company_bio = db.Column(db.String(1000))
     logo_image_url = db.Column(db.String(300))
     location_city = db.Column(db.String(100))
-    location_state_code = db.Column(db.String(20))
+    location_state_code = db.Column(db.String(50))
     founded = db.Column(db.String(25))
     num_employees = db.Column(db.String(25))
     cb_company_id = db.Column(db.Integer, db.ForeignKey('cb_companies.cb_company_id'))
 
 
     social_media = db.relationship('SMLink', backref=db.backref('fc_company'))
-    companay_links = db.relationship('CompanyLink', backref=db.backref('fc_company'))
+    company_links = db.relationship('CompanyLink', backref=db.backref('fc_company'))
     industries = db.relationship('CompanyIndustry', backref=db.backref('fc_companies'))
     cb_company = db.relationship('CBCompany', backref=db.backref('fc_company'))
 
@@ -158,8 +158,6 @@ class IndustryType(db.Model):
     industry_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     industry_name = db.Column(db.String(100), nullable=False, unique=True)
 
-    # fc_companies = db.relationship('CompanyIndustry', backref=db.backref('industry_name'))
-
     def __repr__(self):
         """Provide helpful representation when printed."""
         repr_str = '<IndustryType: industry_id:{}, industry_name:{}>'
@@ -174,6 +172,8 @@ class CompanyIndustry(db.Model):
     company_with_industry_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     industry_id = db.Column(db.Integer, db.ForeignKey('industry_types.industry_id'), nullable=False)
     fc_company_id = db.Column(db.Integer, db.ForeignKey('fc_companies.fc_company_id'), nullable=False)
+
+    industry_type = db.relationship('IndustryType')
 
     def __repr__(self):
         """Provide helpful representation when printed."""

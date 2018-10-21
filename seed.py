@@ -68,6 +68,13 @@ def load_cb_companies():
     print("CBCompanies")
     CBCompany.query.delete()
 
+    # Get market types to populate foreign key for market_types table
+    all_market_types = MarketType.query.all()
+    market_type_dict = {}
+
+    for m_type in all_market_types:
+        market_type_dict[m_type.market_type] = m_type.market_type_id
+
     # Read cbcompanies.csv file and insert data
     companies_csv = open('test_companies.csv')
     companies_reader = csv.reader(companies_csv)
@@ -76,6 +83,7 @@ def load_cb_companies():
         cb_company = CBCompany(cb_company_name=row[1].lower(), 
                     cb_url=row[2],
                     cb_permalink=row[0], 
+                    market_type_id=market_type_dict[row[2]],
                     state_code=row[7],
                     city_name=row[9])
         db.session.add(cb_company)

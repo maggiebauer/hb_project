@@ -106,6 +106,7 @@ class DisplaySearchResults extends React.Component  {
         selectedCompanyId: selectCompKey
       },
       success: data => {this.setState({compProfile: data})}
+      // success: {updateSelectedCompData(data)}
     });
   };
 
@@ -143,6 +144,22 @@ class DisplaySearchResults extends React.Component  {
   }; 
     
 };
+
+
+// class DisplayCompanyProfile extends React.Component  {
+//   constructor(props)  {
+//     super(props);
+
+//     this.state = {
+//       selectedCompData: '',
+//     };
+//   }
+
+//   // updateSelectedCompData = (data) =>  {
+//   //   this.setState({selectedCompData: data})
+//   // };
+//   // console.log(this.selectedCompData);
+// };
 
 ReactDOM.render(
   (

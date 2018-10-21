@@ -22,14 +22,9 @@ def fetch_all_cb_companies(company_str):
     ''' Find all possible Crunchbase companies and return a list of possible matches '''
 
     comp_str = '%' + company_str + '%'
-    companies = CBCompany.query.filter(CBCompany.cb_company_name.like(comp_str)).all()
+    companies = CBCompany.query.filter(CBCompany.cb_company_name.like(comp_str)).limit(25).all()
     return companies
 
-def fetch_selected_cb_company(user_company_str):
-    ''' Fetch the company object from CBCopmany to use for look up with FullContact '''
-    
-    company = CBCompany.query.filter(CBCompany.cb_company_name == user_company_str.lower()).first()
-    return company
 
 def get_domain(cb_co_object):
     ''' Returns domain from Crunchbase company url '''
@@ -64,11 +59,6 @@ def fetch_fc_company(domain):
 
     return response_json_obj
 
-def run_fetch_funcs(company_str):
-    ''' Run Crunchbase and FullContact fetch functions for a given search '''
-    
-    pass
-
 
 ################################################################################
 # FullContact info loaded to database
@@ -102,7 +92,7 @@ def load_fc_company(response, domain, cb_company_id):
                             fc_company_bio=response['bio'],
                             logo_image_url=response['logo'],
                             location_city=response['details']['locations'][0]['city'],
-                            location_state_code=response['details']['locations'][0]['regionCode'],
+                            location_state_code=response['details']['locations'][0]['region'],
                             founded=response['founded'],
                             num_employees=response['employees'],
                             cb_company_id=cb_company_id)
