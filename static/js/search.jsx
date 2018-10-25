@@ -1,12 +1,14 @@
 
 
-class DisplaySearchBar extends React.Component  {
+class DisplayApp extends React.Component  {
   constructor(props)  {
     super(props);
 
     this.state = {
       searchCompany: '',
       searchResults: [],
+      showCompProfile: false,
+      companyProfileData: {},
     }
   };
 
@@ -23,30 +25,48 @@ class DisplaySearchBar extends React.Component  {
   setCompaniesArray = () =>  {
     // sets the array of companyies found in database from search bar input
 
-    $.get('/search.json${searchCompany}', data => {
+    $.get('/search.json', data => {
       this.setState({compPreviewArray: data.searchCompany});
     });
+  };
+
+  setCompProfileData = (data) =>  {
+    this.setState({companyProfileData: data});
+    this.setState({showCompProfile: true}); 
   };
 
 
   render()  {
     return (
       <div>
-        <form onSubmit={this.findCompany.bind(this)}>
-          <div className="form-inputs">
-            <input type="text" 
-              name="search-comp"
-              placeholder="Enter company name" 
-              value={this.state.searchCompany} 
-              required
-              onChange={e => this.setState({  searchCompany: e.target.value })} 
-            /> 
-            <input type="submit" className="btn btn-primary" value="search" />
+        {!this.state.showCompProfile && <div>
+          <form onSubmit={this.findCompany.bind(this)}>
+            <div className="form-inputs">
+              <input type="text" 
+                name="search-comp"
+                placeholder="Enter company name" 
+                value={this.state.searchCompany} 
+                required
+                onChange={e => this.setState({  searchCompany: e.target.value })} 
+              /> 
+              <input type="submit" className="btn btn-primary" value="search" />
+            </div>
+          </form>
+
+         <div className="container">
+              <DisplaySearchResults 
+                companies={this.state.searchResults} 
+                handleResponse={this.setCompProfileData}
+              />
           </div>
-        </form>
-        <div className="container">
-          <DisplaySearchResults companies={this.state.searchResults} />
-        </div>
+        </div>}
+
+        {this.state.showCompProfile && <div className="container">
+          <DisplayCompanyProfile 
+            company={this.state.companyProfileData} 
+          />
+        </div>}
+
       </div>
       );
     }
@@ -69,7 +89,7 @@ const CompPreview = ( props ) =>  {
               <a target="_blank" rel="noopener noreferrer" href={props.url}>{props.url}</a>
             </button>
           </span>
-          <button type="button" className="btn btn-secondary center-btn" onClick={props.handleClick}>Select</button>
+          <button type="button" className="btn btn-secondary center-btn" onClick={props.handleClick.bind(props)}>Select</button>
       </div>
   </div>
   )
@@ -86,9 +106,9 @@ class DisplaySearchResults extends React.Component  {
       compPreviewArray: [],
       showCompResults: false,
       companies: [],
-      compProfile: [],
     };
   }
+
 
 
   handleClick = (e, compId) => {
@@ -105,8 +125,7 @@ class DisplaySearchResults extends React.Component  {
       data: {
         selectedCompanyId: selectCompKey
       },
-      success: data => {this.setState({compProfile: data})}
-      // success: {updateSelectedCompData(data)}
+      success: data => {console.log(data);this.props.handleResponse(data)}
     });
   };
 
@@ -134,7 +153,7 @@ class DisplaySearchResults extends React.Component  {
               compLocation={company['city_name'] + ', ' + company['state_code']}
               url={company['cb_url']} 
               key={company['cb_company_id']}
-              handleClick={(e) => this.handleClick(e, company['cb_company_id'])} 
+              handleClick={(e) => this.handleClick(e, company['cb_company_id'])}
             />
           );
         })}
@@ -145,26 +164,41 @@ class DisplaySearchResults extends React.Component  {
     
 };
 
+const CompProfile = ( props ) =>  {
+  return (
+    <div className="container">
+      <div className="bs-component">
+        <span>{props.companyName}</span>
+      </div>
+    </div>
+  )
+};
 
-// class DisplayCompanyProfile extends React.Component  {
-//   constructor(props)  {
-//     super(props);
+class DisplayCompanyProfile extends React.Component  {
+  constructor(props)  {
+    super(props);
 
-//     this.state = {
-//       selectedCompData: '',
-//     };
-//   }
+  }
 
-//   // updateSelectedCompData = (data) =>  {
-//   //   this.setState({selectedCompData: data})
-//   // };
-//   // console.log(this.selectedCompData);
-// };
+
+  render()  {
+    let profilePage = null;
+
+      let company = this.props.company;
+      return (
+          <div>
+            <CompProfile
+              companyName={company['crunchbase'][0]['cb comp name']}
+            />
+          </div>
+      );  
+  };
+};
 
 ReactDOM.render(
   (
   <React.Fragment>
-    <DisplaySearchBar />
+    <DisplayApp />
   </React.Fragment>
   ),
     document.getElementById('search-bar'),

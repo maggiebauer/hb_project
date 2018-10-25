@@ -168,6 +168,7 @@ def display_company_profile():
 
         selected_comp_info_dict['fullcontact'] = joined_fc_data
     
+    print(selected_comp_info_dict)
     return jsonify(selected_comp_info_dict)
 
 
