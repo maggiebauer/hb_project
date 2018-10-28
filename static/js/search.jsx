@@ -66,7 +66,6 @@ class DisplayApp extends React.Component  {
             company={this.state.companyProfileData} 
           />
         </div>}
-
       </div>
       );
     }
@@ -96,7 +95,6 @@ const CompPreview = ( props ) =>  {
 };
 
 
-
 class DisplaySearchResults extends React.Component  {
   constructor(props)  {
     super(props);
@@ -108,8 +106,6 @@ class DisplaySearchResults extends React.Component  {
       companies: [],
     };
   }
-
-
 
   handleClick = (e, compId) => {
     // debugger
@@ -125,13 +121,10 @@ class DisplaySearchResults extends React.Component  {
       data: {
         selectedCompanyId: selectCompKey
       },
-      success: data => {console.log(data);this.props.handleResponse(data)}
+      success: data => {this.props.handleResponse(data)}
     });
   };
 
-    
-
- 
   checkForResults = () =>   {
       let compPreviewArray = [...this.state.compPreviewArray];
       if ( compPreviewArray != [] ) {
@@ -167,32 +160,106 @@ class DisplaySearchResults extends React.Component  {
 const CompProfile = ( props ) =>  {
   return (
     <div className="container">
-      <div className="bs-component">
-        <span>{props.companyName}</span>
+      <div className="jumbotron">
+        <span><img src={props.compLogo} alt="logo" /></span>
+
+        <div className="card text-white bg-secondary mb-3">
+    
+          <h1 className="card-header">{props.compName}</h1>
+  
+          <div className="card-body">
+            <h4 className="card-title">{props.compBio}</h4>
+          
+            <span className="card-text">
+              <div>Industry: {props.compIndustry}</div>
+              <div>Founded: {props.compFounded}</div>
+              <div>Location: {props.compLocation}</div>
+              <div>Website: 
+                <a target="_blank" rel="noopener noreferrer" href={props.compUrl}> {props.compDomain}</a>
+              </div>
+              <div>Company Size: {props.compEmployees}</div>
+           </span>
+        
+          </div>
+        </div>
       </div>
     </div>
   )
+};
+
+const CompSMLinks = ( props ) =>  {
+  return (
+    <div className="card text">
+      <div>{props.siteName}</div>
+    </div>
+    );
 };
 
 class DisplayCompanyProfile extends React.Component  {
   constructor(props)  {
     super(props);
 
-  }
+  };
+
+  smSiteLogos =  {
+      'linkedincompany': 'https://upload.wikimedia.org/wikipedia/commons/0/01/LinkedIn_Logo.svg',
+      'twitter': 'https://upload.wikimedia.org/wikipedia/commons/5/51/Twitter_logo.svg',
+      'angellist': 'https://education.500.co/wp-content/uploads/2017/02/AngelList-Logo.png',
+      'crunchbasecompany': 'https://upload.wikimedia.org/wikipedia/commons/a/a0/CrunchBase.svg',
+      'instagram': 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Instagram_logo.svg',
+      'owler': 'https://upload.wikimedia.org/wikipedia/commons/e/e9/Owler_logo.png',
+      'facebook': 'https://upload.wikimedia.org/wikipedia/commons/8/87/Facebook_Logo_%282015%29_light.svg',
+      'glassdoor': 'https://upload.wikimedia.org/wikipedia/commons/d/d2/Glassdoor_logo.png',
+    };
+
+    selectLogo = ( smItem ) =>  {
+      for (const [key, value] of Object.entries(smSiteLogos))  {
+        if (key == smItem['site name'])  {
+          return value;
+        }
+      }
+    };
 
 
   render()  {
     let profilePage = null;
 
-      let company = this.props.company;
-      return (
-          <div>
-            <CompProfile
-              companyName={company['crunchbase'][0]['cb comp name']}
-            />
-          </div>
-      );  
+    let company = this.props.company;
+    let compSMLinks = [...this.props.company['fullcontact'][6]['social_media']];
+    let socialMedia = null;
+
+    console.log(compSMLinks);
+
+    socialMedia = compSMLinks.map((company, index) =>  {
+      console.log(company);
+      return(
+        <div>
+          <CompSMLinks
+            siteName={company[0]['site name']}
+          />
+        </div>
+        )
+    });
+
+
+    return (
+      <div>
+        <CompProfile
+          compIndustry={company['fullcontact'][7]['industries'][0][0]['industry type']}
+          compLogo={company['fullcontact'][3]['logo url']}
+          compName={company['crunchbase'][0]['cb comp name']}
+          compBio={company['fullcontact'][2]['company bio']}
+          compFounded={company['fullcontact'][4]['founded']}
+          compLocation={company['crunchbase'][3]['city'] + ', ' + company['crunchbase'][2]['state']}
+          compDomain={company['fullcontact'][1]['comp domain']}
+          compUrl={company['crunchbase'][1]['comp url']}
+          compEmployees={company['fullcontact'][5]['employees']}
+        />
+        {socialMedia}
+      </div>
+    );  
   };
+
 };
 
 ReactDOM.render(

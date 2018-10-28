@@ -1,6 +1,5 @@
 from jinja2 import StrictUndefined
-from flask import (Flask, render_template, redirect, request, flash,
-                   session, jsonify)
+from flask import (Flask, request, flash, render_template, session, jsonify)
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.orm import joinedload
 import model as m
@@ -98,7 +97,7 @@ def display_company_profile():
         first()
         )
 
-    # function that takes in the fc company objects and turns into a lst
+    # function that takes in the joined fc company objects and turns into a lst of dicts
     def create_fc_comp_info_lst(comp_obj):
         
         social_media_lst = []
@@ -168,7 +167,6 @@ def display_company_profile():
 
         selected_comp_info_dict['fullcontact'] = joined_fc_data
     
-    print(selected_comp_info_dict)
     return jsonify(selected_comp_info_dict)
 
 
