@@ -17,3 +17,18 @@
   margin: 0 auto;
   display: block;
 }
+
+img {
+    height: 50px;
+    margin: 0 auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+a {
+    color: #fff;
+}
+
+a:hover {
+    color: #B58900
+}
