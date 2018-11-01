@@ -4,6 +4,7 @@ class DisplayApp extends React.Component  {
   constructor(props)  {
     super(props);
 
+    // highest level state
     this.state = {
       searchCompany: '',
       searchResults: [],
@@ -31,11 +32,13 @@ class DisplayApp extends React.Component  {
   };
 
   setCompProfileData = (data) =>  {
+    // sets the data used to display company profile when received from the server 
+
     this.setState({companyProfileData: data});
     this.setState({showCompProfile: true}); 
   };
 
-
+  // renders the Display App components and all child components
   render()  {
     return (
       <div>
@@ -73,6 +76,7 @@ class DisplayApp extends React.Component  {
 
 
 const CompPreview = ( props ) =>  {
+  // displays company preview and captures selected company
 
   return (
    <div className="card border-secondary mb-3">
@@ -99,6 +103,7 @@ class DisplaySearchResults extends React.Component  {
   constructor(props)  {
     super(props);
 
+    // handles state for the DisplaySearchResults component
     this.state = {
       selectedCompanyId: '',
       compPreviewArray: [],
@@ -109,7 +114,7 @@ class DisplaySearchResults extends React.Component  {
 
   handleClick = (e, compId) => {
     // debugger
-    // callback function
+    // callback function to capture selected company and update the companyProfileData state
     e.preventDefault();
 
     const selectCompKey = compId;
@@ -132,7 +137,7 @@ class DisplaySearchResults extends React.Component  {
       }
   };
 
-
+  // renders the list of possible companies to have profile displayed
   render()  {
     let comps = null;
 
@@ -157,6 +162,7 @@ class DisplaySearchResults extends React.Component  {
     
 };
 
+// component for the general company to be displayed on profile page
 const CompProfile = ( props ) =>  {
   return (
     <div className="container">
@@ -169,7 +175,7 @@ const CompProfile = ( props ) =>  {
   
           <div className="card-body">
             <h4 className="card-title">{props.compBio}</h4>
-          
+        
             <span className="card-text">
               <div>Industry: {props.compIndustry}</div>
               <div>Founded: {props.compFounded}</div>
@@ -177,9 +183,10 @@ const CompProfile = ( props ) =>  {
               <div>Website: 
                 <a target="_blank" rel="noopener noreferrer" href={props.compUrl}> {props.compDomain}</a>
               </div>
+
               <div>Company Size: {props.compEmployees}</div>
            </span>
-        
+          
           </div>
         </div>
       </div>
@@ -187,6 +194,7 @@ const CompProfile = ( props ) =>  {
   )
 };
 
+// component for the social media links cards to be displayed on the profile page
 const CompSMLinks = ( props ) =>  {
   return (
     <div className="card text-white bg-secondary mb-3">
@@ -194,14 +202,15 @@ const CompSMLinks = ( props ) =>  {
         <img src={props.smLogoImg} />
       </div>
       <div className="card-body">
-        <div>{props.smBio}</div>
+        <div><h5>{props.smBio}</h5></div>
         <div>{props.smUrl}</div>
-        <button type="button" className="btn btn-primary" onClick={props.handleClick}>Go to Site</button>
+        <button type="button" className="btn btn-primary" onClick={props.handleClick}>Go to the Site</button>
       </div>
     </div>
     );
 };
 
+// object of social media sites and the links to their logo images
 const smSiteLogos =  {
   'linkedincompany': 'https://upload.wikimedia.org/wikipedia/commons/0/01/LinkedIn_Logo.svg',
   'twitter': 'https://upload.wikimedia.org/wikipedia/commons/5/51/Twitter_logo.svg',
@@ -211,7 +220,12 @@ const smSiteLogos =  {
   'owler': 'http://www.isalesman.com/dev/wp-content/uploads/2016/04/owlerlogo_highresolution-1-300x158.png',
   'facebook': 'https://upload.wikimedia.org/wikipedia/commons/8/87/Facebook_Logo_%282015%29_light.svg',
   'glassdoor': 'https://upload.wikimedia.org/wikipedia/commons/d/d2/Glassdoor_logo.png',
+  'youtube': 'https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg',
+  'foursquare': 'https://upload.wikimedia.org/wikipedia/commons/d/dc/Foursquare_logo.svg',
+  'google': 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Google_Plus_logo.svg',
+  'pinterest': 'https://upload.wikimedia.org/wikipedia/commons/3/35/Pinterest_Logo.svg'
 };
+
 
 class DisplayCompanyProfile extends React.Component  {
   constructor(props)  {
@@ -220,6 +234,8 @@ class DisplayCompanyProfile extends React.Component  {
   };
 
   selectLogo = ( smName ) =>  {
+    // selects logo based on social media site name
+
     for (let key of Object.keys(smSiteLogos))  {
       if (key === smName)  {
         return smSiteLogos[key];
@@ -228,10 +244,12 @@ class DisplayCompanyProfile extends React.Component  {
   };
 
   handleClick = (e, url) =>  {
+    // opens social media site url in new window when button is clicked
+
     window.open(url, '_blank')
   };
 
-
+  // renders the full company profile page
   render()  {
     let profilePage = null;
 
@@ -240,15 +258,15 @@ class DisplayCompanyProfile extends React.Component  {
     let socialMedia = null;
 
     socialMedia = compSMLinks.map((compSmLink, index) =>  {
-      console.log(compSmLink);
+      // console.log(compSmLink);
       return(
         <div>
           <CompSMLinks
-            key={compSmLink[1]['site url']}
-            smLogoImg={this.selectLogo(compSmLink[0]['site name'])}
-            smUrl={compSmLink[1]['site url']}
+            key={compSmLink[1]['site_url']}
+            smLogoImg={this.selectLogo(compSmLink[0]['site_name'])}
+            smUrl={compSmLink[1]['site_url']}
             smBio={compSmLink[2]['site_bio']}
-            handleClick={(e) => this.handleClick(e, compSmLink[1]['site url'])}
+            handleClick={(e) => this.handleClick(e, compSmLink[1]['site_url'])}
           />
         </div>
         )
@@ -258,15 +276,15 @@ class DisplayCompanyProfile extends React.Component  {
     return (
       <div>
         <CompProfile
-          key={company['fullcontact'][1]['comp domain']}
-          compIndustry={company['fullcontact'][7]['industries'][0][0]['industry type']}
-          compLogo={company['fullcontact'][3]['logo url']}
-          compName={company['crunchbase'][0]['cb comp name']}
-          compBio={company['fullcontact'][2]['company bio']}
+          key={company['fullcontact'][1]['comp_domain']}
+          compIndustry={company['fullcontact'][7]['industries'][0][0]['industry_type']}
+          compLogo={company['fullcontact'][3]['logo_url']}
+          compName={company['crunchbase'][0]['cb_comp_name']}
+          compBio={company['fullcontact'][2]['company_bio']}
           compFounded={company['fullcontact'][4]['founded']}
           compLocation={company['crunchbase'][3]['city'] + ', ' + company['crunchbase'][2]['state']}
-          compDomain={company['fullcontact'][1]['comp domain']}
-          compUrl={company['crunchbase'][1]['comp url']}
+          compDomain={company['fullcontact'][1]['comp_domain']}
+          compUrl={company['crunchbase'][1]['comp_url']}
           compEmployees={company['fullcontact'][5]['employees']}
         />
         <div className="jumbotron">

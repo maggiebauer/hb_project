@@ -21,6 +21,7 @@ class CBCompany(db.Model):
     market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
     state_code = db.Column(db.String(10))
     city_name = db.Column(db.String(50))
+    # first_funding = db.Column(db.DateTime)
 
     funding_rounds = db.relationship('FundingRound', backref=db.backref('cb_company'))
     market_type = db.relationship('MarketType', backref=db.backref('cb_companies'))
@@ -75,7 +76,7 @@ class MarketType(db.Model):
     __tablename__ = 'market_types'
 
     market_type_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    market_type = db.Column(db.String(200), nullable=False)
+    market_type = db.Column(db.String(1000), nullable=False)
 
     def __repr__(self):
         """Provide helpful representation when printed."""    
@@ -95,7 +96,7 @@ class FCCompany(db.Model):
     fc_company_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     fc_company_name = db.Column(db.String(100), nullable=False)
     fc_company_domain = db.Column(db.String(100), nullable=False, unique=True) 
-    fc_company_bio = db.Column(db.String(1000))
+    fc_company_bio = db.Column(db.String(5000))
     logo_image_url = db.Column(db.String(300))
     location_city = db.Column(db.String(100))
     location_state_code = db.Column(db.String(50))

@@ -27,7 +27,7 @@ def load_market_types():
     MarketType.query.delete()
 
     # Read cbrounds.csv file and insert data
-    rounds_csv = open('test_rounds.csv')
+    rounds_csv = open('seed_data/project_cbrounds.csv')
     rounds_reader = csv.reader(rounds_csv)
     
     market_type_dict = {}
@@ -49,7 +49,7 @@ def load_funding_types():
     funding_type_dict = {}
 
     # Read cbrounds.csv file and insert data
-    rounds_csv = open('test_rounds.csv')
+    rounds_csv = open('seed_data/project_cbrounds.csv')
     rounds_reader = csv.reader(rounds_csv)
 
     for row in rounds_reader:  
@@ -76,16 +76,17 @@ def load_cb_companies():
         market_type_dict[m_type.market_type] = m_type.market_type_id
 
     # Read cbcompanies.csv file and insert data
-    companies_csv = open('test_companies.csv')
+    companies_csv = open('seed_data/project_cbcompanies.csv')
     companies_reader = csv.reader(companies_csv)
     
     for row in companies_reader:        
         cb_company = CBCompany(cb_company_name=row[1].lower(), 
                     cb_url=row[2],
                     cb_permalink=row[0], 
-                    market_type_id=market_type_dict[row[2]],
+                    market_type_id=market_type_dict[row[3]],
                     state_code=row[7],
                     city_name=row[9])
+                    # founded_date=row[])
         db.session.add(cb_company)
 
     db.session.commit()
@@ -120,7 +121,7 @@ def load_cb_rounds():
 
 
     # Read cbrounds.csv file and insert data
-    rounds_csv = open('test_rounds.csv')
+    rounds_csv = open('seed_data/project_cbrounds.csv')
     rounds_reader = csv.reader(rounds_csv)
     
     for row in rounds_reader:      
