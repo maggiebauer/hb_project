@@ -210,6 +210,14 @@ const CompSMLinks = ( props ) =>  {
     );
 };
 
+const CompFundingChart = ( props ) => {
+  return(<div></div>);
+}
+
+const MarketFundingChart = ( props ) => {
+  return(<div></div>);
+}
+
 // object of social media sites and the links to their logo images
 const smSiteLogos =  {
   'linkedincompany': 'https://upload.wikimedia.org/wikipedia/commons/0/01/LinkedIn_Logo.svg',
@@ -223,7 +231,8 @@ const smSiteLogos =  {
   'youtube': 'https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg',
   'foursquare': 'https://upload.wikimedia.org/wikipedia/commons/d/dc/Foursquare_logo.svg',
   'google': 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Google_Plus_logo.svg',
-  'pinterest': 'https://upload.wikimedia.org/wikipedia/commons/3/35/Pinterest_Logo.svg'
+  'pinterest': 'https://upload.wikimedia.org/wikipedia/commons/3/35/Pinterest_Logo.svg',
+  'klout': 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Klout_logo.svg',
 };
 
 

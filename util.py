@@ -80,10 +80,6 @@ def load_fc_industry_types(response):
 # need to add in cb_comapny_id and domain - and uncomment cb_company backref
 def load_fc_company(response, domain, cb_company_id):
     ''' Load the company info from FullContact and then load the remaining FC tables '''
-
-    # fc_co_name = response['organization']['name']
-
-    # if not FCCompany.query.filter(FCCompany.fc_company_name==fc_co_name).first():
     
     fc_co_domain = domain
     if not FCCompany.query.filter(FCCompany.fc_company_domain == fc_co_domain).first():
@@ -104,10 +100,8 @@ def load_fc_company(response, domain, cb_company_id):
 
     def load_company_links(response, fc_company_id):
         ''' Load the company links info from FullContact '''
-        # import pdb; pdb.set_trace()
+        
         for link in response['details']['urls']:
-
-            # if not CompanyLink.query.filter(CompanyLink.link_url == link['value']):
             company_link = CompanyLink(fc_company_id=fc_company_id,
                             link_type=link['label'],
                             link_url=link['value'])
@@ -116,14 +110,10 @@ def load_fc_company(response, domain, cb_company_id):
 
     def load_social_media(response, fc_company_id):
         ''' Load the social media links info from FullContact '''
-        # import pdb; pdb.set_trace()
 
         sm_site_dict = response['details']['profiles']
-        # for link_type in response['details']['profiles']:
+
         for link_type in sm_site_dict.keys():
-            # for site in link_type.keys():
-
-
             sm_link = SMLink(fc_company_id=fc_company_id,
                         sm_name=sm_site_dict[link_type]['service'],
                         sm_site_url=sm_site_dict[link_type]['url'],

@@ -18,13 +18,14 @@ class CBCompany(db.Model):
     cb_company_name = db.Column(db.String(100), nullable=False)
     cb_permalink = db.Column(db.String(300), nullable=False)
     cb_url = db.Column(db.String(300))
-    market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
+    # market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
     state_code = db.Column(db.String(10))
     city_name = db.Column(db.String(50))
-    # first_funding = db.Column(db.DateTime)
+    first_funding = db.Column(db.DateTime)
+    total_funding = db.Column(db.BigInteger)
 
     funding_rounds = db.relationship('FundingRound', backref=db.backref('cb_company'))
-    market_type = db.relationship('MarketType', backref=db.backref('cb_companies'))
+    company_markets = db.relationship('CompanyMarket', backref=db.backref('cb_company'))
 
     def __repr__(self):
         """Provide helpful representation when printed."""
@@ -40,12 +41,12 @@ class FundingRound(db.Model):
     funding_round_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     cb_company_id = db.Column(db.Integer, db.ForeignKey('cb_companies.cb_company_id'), nullable=False)
     funding_type_id = db.Column(db.Integer, db.ForeignKey('funding_types.funding_type_id'), nullable=False)
-    market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
+    # market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'))
     funded_amt = db.Column(db.String(25))
     funded_date = db.Column(db.DateTime)
 
     funding_type = db.relationship('FundingType', backref=db.backref('founding_rounds'))
-    market_type = db.relationship('MarketType')
+    # market_type = db.relationship('MarketType')
 
     def __repr__(self):
         """Provide helpful representation when printed."""
@@ -76,13 +77,30 @@ class MarketType(db.Model):
     __tablename__ = 'market_types'
 
     market_type_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    market_type = db.Column(db.String(1000), nullable=False)
+    market_type = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
         """Provide helpful representation when printed."""    
     
         repr_str = '<MarketType: id:{}, market_type:{}>'
         return repr_str.format(self.market_type_id, self.market_type)
+
+class CompanyMarket(db.Model):
+    """ Crunchbase market and company pairings """
+
+    __tablename__ = 'company_markets'
+
+    market_company_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    cb_company_id = db.Column(db.Integer, db.ForeignKey('cb_companies.cb_company_id'), nullable=False)
+    market_type_id = db.Column(db.Integer, db.ForeignKey('market_types.market_type_id'), nullable=False)
+
+    market_type = db.relationship('MarketType', backref=db.backref('company_markets'))
+
+    def __repr__(self):
+        """Provide helpful representation when printed."""    
+    
+        repr_str = '<CompanyMarket: id:{}, company_id: {}, market_type_id:{}>'
+        return repr_str.format(self.market_company_id, self.cb_company_id, self.market_type_id)    
 
 
 ################################################################################
@@ -191,7 +209,7 @@ def connect_to_db(app):
     """Connect the database to our Flask app."""
 
     # Configure to use our PstgreSQL database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///company_insights'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///company_insights_2'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.app = app
     db.init_app(app)

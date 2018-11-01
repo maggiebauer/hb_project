@@ -10,6 +10,7 @@ from model import CBCompany
 from model import FundingRound
 from model import FundingType
 from model import MarketType
+from model import CompanyMarket
 
 from model import connect_to_db, db
 from server import app
@@ -32,10 +33,13 @@ def load_market_types():
     
     market_type_dict = {}
 
-    for row in rounds_reader:  
-        if row[2] not in market_type_dict:
-            market_type_dict[row[2]] = True
-            market_type = MarketType(market_type=row[2])
+    for row in rounds_reader:
+        market_names = row[2].split('|')
+
+        for item in market_names:
+            if item not in market_type_dict:
+                market_type_dict[item] = True
+                market_type = MarketType(market_type=item)
             
             db.session.add(market_type)
     db.session.commit()
@@ -80,15 +84,25 @@ def load_cb_companies():
     companies_reader = csv.reader(companies_csv)
     
     for row in companies_reader:        
-        cb_company = CBCompany(cb_company_name=row[1].lower(), 
+        cb_company = CBCompany(
+                    cb_company_name=row[1].lower(), 
                     cb_url=row[2],
                     cb_permalink=row[0], 
-                    market_type_id=market_type_dict[row[3]],
+                    # market_type_id=market_type_dict[row[3]],
                     state_code=row[7],
-                    city_name=row[9])
-                    # founded_date=row[])
+                    city_name=row[9],
+                    first_funding=row[12] if row[12] else None,
+                    total_funding=int(float(row[4])) if row[4] != '-' else None)
         db.session.add(cb_company)
+        db.session.commit()
 
+        markets = row[3].split('|')
+
+        for item in markets:
+            company_market = CompanyMarket(
+                cb_company_id=cb_company.cb_company_id,
+                market_type_id=market_type_dict[item])
+            db.session.add(company_market)
     db.session.commit()
 
 
@@ -105,12 +119,12 @@ def load_cb_rounds():
     for f_type in all_funding_types:
         funding_type_dict[(f_type.funding_type_name, f_type.funding_type_code)] = f_type.funding_type_id
 
-    # Get market types to populate foreign key for market_types table
-    all_market_types = MarketType.query.all()
-    market_type_dict = {}
+    # # Get market types to populate foreign key for market_types table
+    # all_market_types = MarketType.query.all()
+    # market_type_dict = {}
 
-    for m_type in all_market_types:
-        market_type_dict[m_type.market_type] = m_type.market_type_id
+    # for m_type in all_market_types:
+    #     market_type_dict[m_type.market_type] = m_type.market_type_id
 
     # Get company ids for foreign key in the funding_rounds table
     all_company_ids = CBCompany.query.all()
@@ -127,12 +141,25 @@ def load_cb_rounds():
     for row in rounds_reader:      
         cb_round = FundingRound(funded_amt=row[11],
                     funded_date=row[10], 
-                    market_type_id=market_type_dict[row[2]],
+                    # market_type_id=market_type_dict[row[2]],
                     cb_company_id=company_id_dict[row[0]],
                     funding_type_id=funding_type_dict[(row[8], row[9])])
         db.session.add(cb_round)
 
     db.session.commit()
+
+# def load_company_markets():
+#     """Load company markets from seed_data/cbcompanies into database."""
+
+#     print("CompanyMarket")
+#     CompanyMarket.query.delete()
+    
+#     # Get market types to populate foreign key for market_types table
+#     all_market_types = MarketType.query.all()
+#     market_type_dict = {}
+
+#     for m_type in all_market_types:
+#         market_type_dict[m_type.market_type] = m_type.market_type_id
 
 
 

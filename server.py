@@ -59,9 +59,9 @@ def display_company_profile():
         m.CBCompany.query.
         options(joinedload(m.CBCompany.funding_rounds).
             joinedload(m.FundingRound.funding_type)).
-        options(joinedload(m.CBCompany.market_type)).
+        options(joinedload(m.CBCompany.company_markets).
+            joinedload(m.CompanyMarket.market_type)).
         filter(m.CBCompany.cb_company_id == selected_cb_comp_id).
-        order_by(m.FundingRound.funded_date).
         first()
         )
 
@@ -73,7 +73,7 @@ def display_company_profile():
             'round_name': item.funding_type.funding_type_name,
             'funded_amount': item.funded_amt,
             'funded_date': item.funded_date,
-            'funding_type_id': item.funding_type_id
+            'funding_type_id': item.funding_type_id,
         }
         funding_rounds_lst.append(funding_round_dict)
 
@@ -93,28 +93,28 @@ def display_company_profile():
     # figure out latest round funding type id
     funding_type_id = funding_rounds_lst[-1]['funding_type_id']
     # figure out market type id
-    market_type_id = joined_cb_data.market_type_id
+    market_types_lst = joined_cb_data.company_markets
     # query 
-    same_market_type_funding_round = (
-        m.FundingRound.query.options(
-        joinedload(m.FundingRound.cb_company)).
-        filter(
-            m.FundingRound.funding_type_id==funding_type_id,
-            m.FundingRound.market_type_id==market_type_id,
-            m.FundingRound.cb_company_id!=selected_cb_comp_id,
-            m.FundingRound.funded_amt!='').
-        all()
-    )
+    # same_market_type_funding_round = (
+    #     m.FundingRound.query.options(
+    #     joinedload(m.FundingRound.cb_company)).
+    #     filter(
+    #         m.FundingRound.funding_type_id==funding_type_id,
+    #         m.FundingRound.market_type_id==market_type_id,
+    #         m.FundingRound.cb_company_id!=selected_cb_comp_id,
+    #         m.FundingRound.funded_amt!='').
+    #     all()
+    # )
 
-    market_research_data = []
-    for funding_round in same_market_type_funding_round:
-        market_research_data.append({
-            'amount': funding_round.funded_amt,
-            'date': funding_round.funded_date,
-            'company_name': funding_round.cb_company.cb_company_name
-        })
+    # market_research_data = []
+    # for funding_round in same_market_type_funding_round:
+    #     market_research_data.append({
+    #         'amount': funding_round.funded_amt,
+    #         'date': funding_round.funded_date,
+    #         'company_name': funding_round.cb_company.cb_company_name
+    #     })
    
-    selected_comp_info_dict['funding_market_research'] = market_research_data
+    # selected_comp_info_dict['funding_market_research'] = market_research_data
 
     # check to see if fc info already stored in db
     check_fc_comp_db = ( 
