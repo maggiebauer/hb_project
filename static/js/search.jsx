@@ -1,4 +1,5 @@
-
+'use strict';
+import {Doughnut} from 'react-chartjs-2';
 
 class DisplayApp extends React.Component  {
   constructor(props)  {
@@ -42,6 +43,14 @@ class DisplayApp extends React.Component  {
   render()  {
     return (
       <div>
+        <div>
+          <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
+              <div className="container">
+              <a className="navbar-brand" href="http://localhost:5000/">InSiteFull Search</a>        
+          </div>
+        </nav>
+      </div>
+      <div>
         {!this.state.showCompProfile && <div>
           <form onSubmit={this.findCompany.bind(this)}>
             <div className="form-inputs">
@@ -70,7 +79,8 @@ class DisplayApp extends React.Component  {
           />
         </div>}
       </div>
-      );
+      </div>
+    );
     }
 };
 
@@ -211,7 +221,11 @@ const CompSMLinks = ( props ) =>  {
 };
 
 const CompFundingChart = ( props ) => {
-  return(<div></div>);
+  return(
+    <div>
+      <Doughnut data={props.data} labels={props.labels}/>
+    </div>
+  );
 }
 
 const MarketFundingChart = ( props ) => {
@@ -296,6 +310,11 @@ class DisplayCompanyProfile extends React.Component  {
           compUrl={company['crunchbase'][1]['comp_url']}
           compEmployees={company['fullcontact'][5]['employees']}
         />
+        <div>
+          <CompFundingChart
+            data='[40, 60]'
+          />
+        </div>
         <div className="jumbotron">
           {socialMedia}
         </div>

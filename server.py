@@ -97,12 +97,14 @@ def display_company_profile():
     # query 
     # same_market_type_funding_round = (
     #     m.FundingRound.query.options(
-    #     joinedload(m.FundingRound.cb_company)).
+    #     joinedload(m.FundingRound.cb_company).
+    #         joinedload(m.CBCompany.company_markets).
+    #           joinedload(m.CompanyMarket.market_type)).
     #     filter(
-    #         m.FundingRound.funding_type_id==funding_type_id,
-    #         m.FundingRound.market_type_id==market_type_id,
-    #         m.FundingRound.cb_company_id!=selected_cb_comp_id,
-    #         m.FundingRound.funded_amt!='').
+    #         m.FundingRound.funding_type_id == funding_type_id,
+    #         m.FundingRound.market_type_id == market_type_id,
+    #         m.FundingRound.cb_company_id != selected_cb_comp_id,
+    #         m.FundingRound.funded_amt != '').
     #     all()
     # )
 
@@ -152,7 +154,7 @@ def display_company_profile():
 
         for item in comp_obj.industries:
             company_industry_item = [
-                {'industry type': item.industry_type.industry_name}
+                {'industry_type': item.industry_type.industry_name}
             ]
             industry_lst.append(company_industry_item)
 
