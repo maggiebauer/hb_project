@@ -1,4 +1,7 @@
-'use strict';
+import _ from 'lodash';
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 import {Doughnut} from 'react-chartjs-2';
 
 class DisplayApp extends React.Component  {
@@ -220,10 +223,38 @@ const CompSMLinks = ( props ) =>  {
     );
 };
 
+// const doughnutData = {
+//   labels: [
+//     'Red',
+//     'Green',
+//     'Yellow'
+//   ],
+//   datasets: [{
+//     data: [300, 50, 100],
+//     backgroundColor: [
+//     '#FF6384',
+//     '#36A2EB',
+//     '#FFCE56'
+//     ],
+//     hoverBackgroundColor: [
+//     '#FF6384',
+//     '#36A2EB',
+//     '#FFCE56'
+//     ]
+//   }]
+// };
+
 const CompFundingChart = ( props ) => {
+  console.log(props.compData)
   return(
-    <div>
-      <Doughnut data={props.data} labels={props.labels}/>
+
+    <div className="jumbotron">
+      <Doughnut 
+        data={props.compData}
+        width={50}
+        height={50}
+        options={{}}
+        />
     </div>
   );
 }
@@ -312,7 +343,7 @@ class DisplayCompanyProfile extends React.Component  {
         />
         <div>
           <CompFundingChart
-            data='[40, 60]'
+            compData={company['comp_funding_rounds_data']}
           />
         </div>
         <div className="jumbotron">

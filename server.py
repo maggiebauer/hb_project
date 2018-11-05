@@ -70,7 +70,7 @@ def display_company_profile():
     # create list of funding rounds
     for item in joined_cb_data.funding_rounds:
         funding_round_dict = {
-            'round_name': item.funding_type.funding_type_name,
+            'round_name': item.funding_type.funding_type_name + ' ' + item.funding_type.funding_type_code,
             'funded_amount': item.funded_amt,
             'funded_date': item.funded_date,
             'funding_type_id': item.funding_type_id,
@@ -89,6 +89,23 @@ def display_company_profile():
         {'funding_rounds': funding_rounds_lst}
         ]
 
+    #data formatting to pass into dictionary for chart rendering
+    color_lst = ['#e83e8c', '#20c997', '#6f42c1', '#fd7e14', '#2AA198', '#6610f2', 
+        '#fff', '#CB4B16', '#268BD2']
+    funding_round_labels = []
+    funding_round_numbers =[]
+    for item in funding_rounds_lst:
+        funding_round_labels.append(item['round_name'])
+        funding_round_numbers.append(item['funded_amount'])
+
+    selected_comp_info_dict['comp_funding_rounds_data'] = {
+        'labels': funding_round_labels,
+        'datasets': [
+            {'data': funding_round_numbers, 
+            'backgroundColor': color_lst[:len(funding_round_numbers)],
+            'hoverBackgroundColor': color_lst[:len(funding_round_numbers)]}
+            ]
+        }
     # getting the funding rounds for similar market type/funding round companies
     # figure out latest round funding type id
     funding_type_id = funding_rounds_lst[-1]['funding_type_id']
@@ -96,15 +113,14 @@ def display_company_profile():
     market_types_lst = joined_cb_data.company_markets
     # query 
     # same_market_type_funding_round = (
-    #     m.FundingRound.query.options(
-    #     joinedload(m.FundingRound.cb_company).
+    #     m.FundingRound.query.
+    #     options(
+    #         joinedload(m.FundingRound.cb_company).
     #         joinedload(m.CBCompany.company_markets).
-    #           joinedload(m.CompanyMarket.market_type)).
-    #     filter(
-    #         m.FundingRound.funding_type_id == funding_type_id,
-    #         m.FundingRound.market_type_id == market_type_id,
-    #         m.FundingRound.cb_company_id != selected_cb_comp_id,
-    #         m.FundingRound.funded_amt != '').
+    #         joinedload(m.CompanyMarket.market_type)).
+    #         filter(m.FundingRound.funding_type_id == funding_type_id, 
+    #             m.MarketType.market_type_id == market_type_id, 
+    #             m.FundingRound.funded_amt != '').
     #     all()
     # )
 
@@ -116,7 +132,11 @@ def display_company_profile():
     #         'company_name': funding_round.cb_company.cb_company_name
     #     })
    
-    # selected_comp_info_dict['funding_market_research'] = market_research_data
+    # selected_comp_info_dict['market_research_data'] = {
+    #     'labels': []
+    #     'datasets': [{"data": [10, 20, 30]}],
+    #     'labels': ['Red','Yellow','Blue']
+    #     }
 
     # check to see if fc info already stored in db
     check_fc_comp_db = ( 
