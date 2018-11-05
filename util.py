@@ -3,6 +3,7 @@ import os
 import sys
 import urllib.request, urllib.parse
 import io
+from sqlalchemy.orm import joinedload
 from flask import Flask
 from model import connect_to_db, db
 from model import FCCompany
@@ -13,6 +14,7 @@ from model import CompanyIndustry
 from model import CBCompany
 from model import FundingRound
 from model import FundingType
+from model import CompanyMarket
 from model import MarketType
 
 ################################################################################
@@ -22,7 +24,14 @@ def fetch_all_cb_companies(company_str):
     ''' Find all possible Crunchbase companies and return a list of possible matches '''
 
     comp_str = '%' + company_str + '%'
-    companies = CBCompany.query.filter(CBCompany.cb_company_name.like(comp_str)).limit(25).all()
+    companies = (
+        CBCompany.query.
+        options(joinedload(CBCompany.company_markets).
+            joinedload(CompanyMarket.market_type)).
+        filter(CBCompany.cb_company_name.
+        like(comp_str)).
+        limit(25).all()
+        )
     return companies
 
 

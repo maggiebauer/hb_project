@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {Doughnut} from 'react-chartjs-2';
+import {Doughnut, Scatter} from 'react-chartjs-2';
 
 class DisplayApp extends React.Component  {
   constructor(props)  {
@@ -90,7 +90,6 @@ class DisplayApp extends React.Component  {
 
 const CompPreview = ( props ) =>  {
   // displays company preview and captures selected company
-
   return (
    <div className="card border-secondary mb-3">
       <div className="card-header">
@@ -100,6 +99,9 @@ const CompPreview = ( props ) =>  {
       </div>
       <div className="card-body">
           <h4 className="card-title">Location: {props.compLocation}</h4>
+          <div>
+            <h4>Industries: {props.compIndustries}</h4>
+          </div>
           <span>
             <button type="button" className="btn btn-outline-secondary btn-lg btn-block">
               <a target="_blank" rel="noopener noreferrer" href={props.url}>{props.url}</a>
@@ -124,6 +126,19 @@ class DisplaySearchResults extends React.Component  {
       companies: [],
     };
   }
+
+  findMarkets = (company) =>  {
+    let marketArray = [];
+    let marketsStr = '';
+
+    console.log(company);
+
+    for (let market in company['company_markets'])  {
+      marketArray.push(market['market_type']['market_type']);
+    }
+    marketsStr = marketArray.join(', ');
+    return marketsStr;
+  };
 
   handleClick = (e, compId) => {
     // debugger
@@ -162,6 +177,7 @@ class DisplaySearchResults extends React.Component  {
             <CompPreview 
               compName={company['cb_company_name']}
               compLocation={company['city_name'] + ', ' + company['state_code']}
+              compIndustries={this.findMarkets(company)}
               url={company['cb_url']} 
               key={company['cb_company_id']}
               handleClick={(e) => this.handleClick(e, company['cb_company_id'])}
@@ -245,7 +261,6 @@ const CompSMLinks = ( props ) =>  {
 // };
 
 const CompFundingChart = ( props ) => {
-  console.log(props.compData)
   return(
 
     <div className="jumbotron">
@@ -260,7 +275,16 @@ const CompFundingChart = ( props ) => {
 }
 
 const MarketFundingChart = ( props ) => {
-  return(<div></div>);
+  return(
+    <div className="jumbotron">
+      <Scatter
+        data={props.compMarketData}
+        width={50}
+        height={50}
+        options={{}}
+      />
+    </div>
+  );
 }
 
 // object of social media sites and the links to their logo images
@@ -344,6 +368,11 @@ class DisplayCompanyProfile extends React.Component  {
         <div>
           <CompFundingChart
             compData={company['comp_funding_rounds_data']}
+          />
+        </div>
+        <div>
+          <MarketFundingChart
+            compMarketData={company['mrkt_funding_research']}
           />
         </div>
         <div className="jumbotron">

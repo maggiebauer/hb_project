@@ -90,12 +90,12 @@ def display_company_profile():
         ]
 
     #data formatting to pass into dictionary for chart rendering
-    color_lst = ['#e83e8c', '#20c997', '#6f42c1', '#fd7e14', '#2AA198', '#6610f2', 
-        '#fff', '#CB4B16', '#268BD2']
+    color_lst = ['#e83e8c', '#20c997', '#fff', '#6f42c1', '#fd7e14', '#2AA198', '#6610f2', 
+        '#CB4B16', '#268BD2']
     funding_round_labels = []
     funding_round_numbers =[]
     for item in funding_rounds_lst:
-        funding_round_labels.append(item['round_name'])
+        funding_round_labels.append(item['round_name'] + ': $' + item['funded_amount'])
         funding_round_numbers.append(item['funded_amount'])
 
     selected_comp_info_dict['comp_funding_rounds_data'] = {
@@ -112,31 +112,70 @@ def display_company_profile():
     # figure out market type id
     market_types_lst = joined_cb_data.company_markets
     # query 
-    # same_market_type_funding_round = (
-    #     m.FundingRound.query.
-    #     options(
-    #         joinedload(m.FundingRound.cb_company).
-    #         joinedload(m.CBCompany.company_markets).
-    #         joinedload(m.CompanyMarket.market_type)).
-    #         filter(m.FundingRound.funding_type_id == funding_type_id, 
-    #             m.MarketType.market_type_id == market_type_id, 
-    #             m.FundingRound.funded_amt != '').
-    #     all()
-    # )
+    same_funding_type_rounds = (
+        m.FundingRound.query.
+        options(
+            joinedload(m.FundingRound.cb_company).
+            joinedload(m.CBCompany.company_markets).
+            joinedload(m.CompanyMarket.market_type)).
+            filter(m.FundingRound.funding_type_id == funding_type_id, 
+                m.FundingRound.funded_amt != '').
+        all())
+    
+    def num_of_months(d1, d2):
+        ''' calculate the number of months between funding rounds '''
+        return((d1.year - d2.year) * 12 + d1.month - d2.month)
 
-    # market_research_data = []
-    # for funding_round in same_market_type_funding_round:
-    #     market_research_data.append({
-    #         'amount': funding_round.funded_amt,
-    #         'date': funding_round.funded_date,
-    #         'company_name': funding_round.cb_company.cb_company_name
-    #     })
+    selected_comp_markets = joined_cb_data.company_markets
+    market_ids_set = set()
+    for item in selected_comp_markets:
+        market_ids_set.add(item.market_type_id)
+
+    same_market_and_funding_types = []
+
+    # check for same market type in same_funding_type_round list
+    for item in same_funding_type_rounds:
+        item_markets = item.cb_company.company_markets
+        for market in item_markets:
+            if market.market_type_id in market_ids_set:
+                same_market_and_funding_types.append(item)
+    print(len(same_market_and_funding_types))
+
+    # get data in format for scatter chart
+    funding_and_market_research_data = []
+    for funding_round in same_market_and_funding_types:
+        months_since_first_funding = num_of_months(funding_round.funded_date, funding_round.cb_company.first_funding)
+        if months_since_first_funding != 0:
+            funding_and_market_research_data.append({'x': months_since_first_funding, 'y': funding_round.funded_amt})
+
+    print(funding_and_market_research_data)
+    print(len(funding_and_market_research_data))
+
+        #     {
+        #     'amount': funding_round.funded_amt,
+        #     'date': funding_round.funded_date,
+        #     'company_name': funding_round.cb_company.cb_company_name
+        # }
    
-    # selected_comp_info_dict['market_research_data'] = {
-    #     'labels': []
-    #     'datasets': [{"data": [10, 20, 30]}],
-    #     'labels': ['Red','Yellow','Blue']
-    #     }
+    selected_comp_info_dict['mrkt_funding_research'] = {
+        'labels': ['Scatter'],
+        'datasets': [{
+            'data': funding_and_market_research_data,
+            'fill': False,
+            'backgroundColor': 'rgba(75,192,192,0.4)',
+            'pointBorderColor': 'rgba(75,192,192,1)',
+            'pointBackgroundColor': '#fff',
+            'pointBorderWidth': 1,
+            'pointHoverRadius': 5,
+            'pointHoverBackgroundColor': 'rgba(75,192,192,1)',
+            'pointHoverBorderColor': 'rgba(220,220,220,1)',
+            'pointHoverBorderWidth': 2,
+            'pointRadius': 1,
+            'pointHitRadius': 10,
+            }],
+        'labels': ['Red','Yellow','Blue']
+        }
+
 
     # check to see if fc info already stored in db
     check_fc_comp_db = ( 
