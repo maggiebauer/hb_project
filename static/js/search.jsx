@@ -1,8 +1,15 @@
 import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom';
-
 import {Doughnut, Scatter} from 'react-chartjs-2';
+
+function titleCase(str)  {
+   let splitStr = str.toLowerCase().split(' ');
+   for (let i = 0; i < splitStr.length; i++)  {
+       splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);     
+   }
+   return splitStr.join(' '); 
+}
 
 class DisplayApp extends React.Component  {
   constructor(props)  {
@@ -46,42 +53,47 @@ class DisplayApp extends React.Component  {
   render()  {
     return (
       <div>
+
         <div>
           <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
               <div className="container">
-              <a className="navbar-brand" href="http://localhost:5000/">InSiteFull Search</a>        
-          </div>
-        </nav>
-      </div>
-      <div>
-        {!this.state.showCompProfile && <div>
-          <form onSubmit={this.findCompany.bind(this)}>
-            <div className="form-inputs">
-              <input type="text" 
-                name="search-comp"
-                placeholder="Enter company name" 
-                value={this.state.searchCompany} 
-                required
-                onChange={e => this.setState({  searchCompany: e.target.value })} 
-              /> 
-              <input type="submit" className="btn btn-primary" value="search" />
+              <a className="navbar-brand" href="http://localhost:5000/">GigSaw</a>        
             </div>
-          </form>
+          </nav>
+        </div>
 
-         <div className="container">
-              <DisplaySearchResults 
-                companies={this.state.searchResults} 
-                handleResponse={this.setCompProfileData}
-              />
-          </div>
-        </div>}
+        <div>
+          {!this.state.showCompProfile && <div className="container">
+            <h2 className="chart-title front-page-1">You found the company. You saw their deets.</h2>
+            <h2 className="chart-title front-page-2">You got the gig.</h2>
+            <form onSubmit={this.findCompany.bind(this)}>
+              <div className="form-inputs">
+                <input type="text" 
+                  name="search-comp"
+                  placeholder="Search Companies" 
+                  value={this.state.searchCompany} 
+                  required
+                  onChange={e => this.setState({  searchCompany: e.target.value })} 
+                  className="search-bar"
+                /> 
+                <input type="submit" className="btn btn-primary" value="Search" />
+              </div>
+            </form>
 
-        {this.state.showCompProfile && <div className="container">
-          <DisplayCompanyProfile 
-            company={this.state.companyProfileData} 
-          />
-        </div>}
-      </div>
+           <div>
+                <DisplaySearchResults 
+                  companies={this.state.searchResults} 
+                  handleResponse={this.setCompProfileData}
+                />
+            </div>
+          </div>}
+
+          {this.state.showCompProfile && <div className="new-background">
+            <DisplayCompanyProfile 
+              company={this.state.companyProfileData} 
+            />
+          </div>}
+        </div>
       </div>
     );
     }
@@ -94,13 +106,13 @@ const CompPreview = ( props ) =>  {
    <div className="card border-secondary mb-3">
       <div className="card-header">
           <span>
-              <h3 className="card-title">{props.compName}</h3>
+              <h2 className="card-title">{props.compName}</h2>
           </span>
       </div>
       <div className="card-body">
-          <h4 className="card-title">Location: {props.compLocation}</h4>
+          <h4 className="card-subtitle">Location: {props.compLocation}</h4>
           <div>
-            <h4>Industries: {props.compIndustries}</h4>
+            <h5>Industries: {props.compIndustries}</h5>
           </div>
           <span>
             <button type="button" className="btn btn-outline-secondary btn-lg btn-block">
@@ -126,19 +138,6 @@ class DisplaySearchResults extends React.Component  {
       companies: [],
     };
   }
-
-  findMarkets = (company) =>  {
-    let marketArray = [];
-    let marketsStr = '';
-
-    console.log(company);
-
-    for (let market in company['company_markets'])  {
-      marketArray.push(market['market_type']['market_type']);
-    }
-    marketsStr = marketArray.join(', ');
-    return marketsStr;
-  };
 
   handleClick = (e, compId) => {
     // debugger
@@ -171,13 +170,13 @@ class DisplaySearchResults extends React.Component  {
 
     this.checkForResults;
     comps = (
-      <div>
+      <div className="search-cards col-7">
         {this.props.companies.map( (company, index) =>  {
           return ( 
             <CompPreview 
-              compName={company['cb_company_name']}
+              compName={titleCase(company['cb_company_name'])}
               compLocation={company['city_name'] + ', ' + company['state_code']}
-              compIndustries={this.findMarkets(company)}
+              compIndustries={company['markets']}
               url={company['cb_url']} 
               key={company['cb_company_id']}
               handleClick={(e) => this.handleClick(e, company['cb_company_id'])}
@@ -194,30 +193,26 @@ class DisplaySearchResults extends React.Component  {
 // component for the general company to be displayed on profile page
 const CompProfile = ( props ) =>  {
   return (
-    <div className="container">
-      <div className="jumbotron">
-        <span><img src={props.compLogo} alt="logo" /></span>
+    <div className="container col-6">
+      
+      <span><img src={props.compLogo} alt="logo" /></span>
 
-        <div className="card text-white bg-secondary mb-3">
-    
-          <h1 className="card-header">{props.compName}</h1>
-  
-          <div className="card-body">
-            <h4 className="card-title">{props.compBio}</h4>
+      <div className="card text-white bg-secondary mb-3">
+        <h1 className="card-header">{props.compName}</h1>
         
-            <span className="card-text">
-              <div>Industry: {props.compIndustry}</div>
-              <div>Founded: {props.compFounded}</div>
-              <div>Location: {props.compLocation}</div>
-              <div>Website: 
-                <a target="_blank" rel="noopener noreferrer" href={props.compUrl}> {props.compDomain}</a>
-              </div>
-
-              <div>Company Size: {props.compEmployees}</div>
-           </span>
-          
-          </div>
+        <div className="card-body">
+          <h4 className="card-title">{props.compBio}</h4>    
+          <span className="card-text">
+            <div>Markets: {props.compMarket}</div>
+            <div>Founded: {props.compFounded}</div>
+            <div>Location: {props.compLocation}</div>
+            <div>Website: 
+              <a target="_blank" rel="noopener noreferrer" href={props.compUrl}> {props.compDomain}</a>
+            </div>
+            <div>Company Size: {props.compEmployees}</div>
+         </span>   
         </div>
+
       </div>
     </div>
   )
@@ -228,46 +223,29 @@ const CompSMLinks = ( props ) =>  {
   return (
     <div className="card text-white bg-secondary mb-3">
       <div className="card-header">
-        <img src={props.smLogoImg} />
+        <img src={props.smLogoImg} className="sm-logos" />
       </div>
       <div className="card-body">
-        <div><h5>{props.smBio}</h5></div>
+        <div className="sm-bio"><h5>{props.smBio}</h5></div>
         <div>{props.smUrl}</div>
-        <button type="button" className="btn btn-primary" onClick={props.handleClick}>Go to the Site</button>
+        <button type="button" className="btn btn-primary sm-buttons" onClick={props.handleClick}>Go to the Site</button>
       </div>
     </div>
     );
 };
 
-// const doughnutData = {
-//   labels: [
-//     'Red',
-//     'Green',
-//     'Yellow'
-//   ],
-//   datasets: [{
-//     data: [300, 50, 100],
-//     backgroundColor: [
-//     '#FF6384',
-//     '#36A2EB',
-//     '#FFCE56'
-//     ],
-//     hoverBackgroundColor: [
-//     '#FF6384',
-//     '#36A2EB',
-//     '#FFCE56'
-//     ]
-//   }]
-// };
-
+// chart for company funding
 const CompFundingChart = ( props ) => {
   return(
 
-    <div className="jumbotron">
+    <div className="col-6">
+      <div className="chart-title">
+        <h2 className="chart-title">Total Funding: ${props.totalFunding}</h2>
+      </div>
       <Doughnut 
         data={props.compData}
-        width={50}
-        height={50}
+        width={20}
+        height={20}
         options={{}}
         />
     </div>
@@ -276,11 +254,11 @@ const CompFundingChart = ( props ) => {
 
 const MarketFundingChart = ( props ) => {
   return(
-    <div className="jumbotron">
-      <Scatter
+    <div>
+      <Scatter 
         data={props.compMarketData}
         width={50}
-        height={50}
+        height={15}
         options={{}}
       />
     </div>
@@ -302,6 +280,7 @@ const smSiteLogos =  {
   'google': 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Google_Plus_logo.svg',
   'pinterest': 'https://upload.wikimedia.org/wikipedia/commons/3/35/Pinterest_Logo.svg',
   'klout': 'https://upload.wikimedia.org/wikipedia/commons/a/ae/Klout_logo.svg',
+  'gravatar': 'https://automattic.files.wordpress.com/2005/12/gravatar.png',
 };
 
 
@@ -324,8 +303,8 @@ class DisplayCompanyProfile extends React.Component  {
   handleClick = (e, url) =>  {
     // opens social media site url in new window when button is clicked
 
-    window.open(url, '_blank')
-  };
+    window.open(url, '_blank');
+  }
 
   // renders the full company profile page
   render()  {
@@ -338,7 +317,7 @@ class DisplayCompanyProfile extends React.Component  {
     socialMedia = compSMLinks.map((compSmLink, index) =>  {
       // console.log(compSmLink);
       return(
-        <div>
+        <div className="col-4">
           <CompSMLinks
             key={compSmLink[1]['site_url']}
             smLogoImg={this.selectLogo(compSmLink[0]['site_name'])}
@@ -353,30 +332,39 @@ class DisplayCompanyProfile extends React.Component  {
 
     return (
       <div>
-        <CompProfile
-          key={company['fullcontact'][1]['comp_domain']}
-          compIndustry={company['fullcontact'][7]['industries'][0][0]['industry_type']}
-          compLogo={company['fullcontact'][3]['logo_url']}
-          compName={company['crunchbase'][0]['cb_comp_name']}
-          compBio={company['fullcontact'][2]['company_bio']}
-          compFounded={company['fullcontact'][4]['founded']}
-          compLocation={company['crunchbase'][3]['city'] + ', ' + company['crunchbase'][2]['state']}
-          compDomain={company['fullcontact'][1]['comp_domain']}
-          compUrl={company['crunchbase'][1]['comp_url']}
-          compEmployees={company['fullcontact'][5]['employees']}
-        />
-        <div>
-          <CompFundingChart
+        <div className="jumbotron">
+        <div className="row">
+          <CompProfile 
+            key={company['fullcontact'][1]['comp_domain']}
+            compMarket={company['crunchbase'][6]['markets']}
+            compLogo={company['fullcontact'][3]['logo_url']}
+            compName={titleCase(company['crunchbase'][0]['cb_comp_name'])}
+            compBio={company['fullcontact'][2]['company_bio']}
+            compFounded={company['fullcontact'][4]['founded']}
+            compLocation={company['crunchbase'][3]['city'] + ', ' + company['crunchbase'][2]['state']}
+            compDomain={company['fullcontact'][1]['comp_domain']}
+            compUrl={company['crunchbase'][1]['comp_url']}
+            compEmployees={company['fullcontact'][5]['employees']}
+          />
+          <CompFundingChart 
+            totalFunding={company['crunchbase'][5]['total_funding']}
             compData={company['comp_funding_rounds_data']}
           />
         </div>
-        <div>
+        </div>
+
+        <div className="jumbotron market-chart">
+          <h1 className="chart-title">Market Type Funding Comparison</h1>
           <MarketFundingChart
             compMarketData={company['mrkt_funding_research']}
           />
+          <h4 className="chart-axis">Months since initial funding</h4>
         </div>
         <div className="jumbotron">
-          {socialMedia}
+          <h1 className="chart-title">Social Media Sites</h1>
+          <div className="row">
+            {socialMedia}
+          </div>
         </div>
       </div>
     );  
